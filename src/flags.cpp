@@ -37,6 +37,13 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
+  const char *compiler_flags::input_file()
+  {
+    return "test_scripts/test.brandy";
+  }
+
+  // ---------------------------------------------------------------------------
+
   void compiler_flags::push_options()
   {
     g_options_stack.push(*this);

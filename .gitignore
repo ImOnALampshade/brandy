@@ -28,6 +28,11 @@
 *.app
 
 # Visual Studio
-Debug\
-Release\
-*.user
+Debug/
+Release/
+*.opensdf
+*.sdf
+
+# We want VS to run in the right directory, and the working directory for the debugger is 
+# saved in this file
+#*.user

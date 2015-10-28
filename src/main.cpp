@@ -52,7 +52,7 @@ int main(int argc, const char **argv)
 
   brandy::setup_lexer();
 
-  auto file = load_file("test.brandy");
+  auto file = load_file(brandy::compiler_flags::current().input_file());
 
   std::vector<brandy::token> tokens;
   brandy::tokenize_string(file.get(), tokens);

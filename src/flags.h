@@ -23,6 +23,7 @@ namespace brandy
 
     bool dump_parser_stack();
     bool dump_ast();
+    const char *input_file();
 
     void push_options();
 
