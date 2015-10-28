@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Tokens">
+      <UniqueIdentifier>{77df8d6a-af9d-4ab6-9fae-d1dacb3ddb66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lexer">
+      <UniqueIdentifier>{a87f4fb0-3618-44ec-aa9d-8d84ed661965}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Syntax Tree">
+      <UniqueIdentifier>{3d353db3-9c40-411c-8375-d8e0b6b7d09d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Qualifiers">
+      <UniqueIdentifier>{9701a8f5-98c2-4ce2-be01-da7b5b1ab8a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Parser">
+      <UniqueIdentifier>{408170d7-2e71-4da1-8d33-fc7edf60fe83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Syntax Tree\AST Visitors">
+      <UniqueIdentifier>{b87ca882-5783-4336-8c79-dcf884d41412}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Syntax Tree\AST Visitors\Dotfile">
+      <UniqueIdentifier>{14358d2b-b6db-4fba-b824-4172b335d58c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Syntax Tree\AST Visitors\Tree Dump">
+      <UniqueIdentifier>{489354c1-b9f7-4228-a578-a8cced444a14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Symbol">
+      <UniqueIdentifier>{5f1e944f-cae0-4abd-ac66-30c03e06e6db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Syntax Tree\AST Visitors\Symbol Filler">
+      <UniqueIdentifier>{f98f980b-5c86-4b42-beb7-4a8609b35df2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\operatortokens.inl">
+      <Filter>Tokens</Filter>
+    </None>
+    <None Include="..\src\tokens.inl">
+      <Filter>Tokens</Filter>
+    </None>
+    <None Include="..\src\keywordtokens.inl">
+      <Filter>Tokens</Filter>
+    </None>
+    <None Include="..\src\qualifiers.inl">
+      <Filter>Qualifiers</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\tokens.h">
+      <Filter>Tokens</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\astnodes.h">
+      <Filter>Syntax Tree</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\qualifiers.h">
+      <Filter>Qualifiers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parser.h">
+      <Filter>Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\flags.h" />
+    <ClInclude Include="..\src\lexer.h">
+      <Filter>Lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dotfilevisitor.h">
+      <Filter>Syntax Tree\AST Visitors\Dotfile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\treedumpvisitor.h">
+      <Filter>Syntax Tree\AST Visitors\Tree Dump</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\symbol.h">
+      <Filter>Symbol</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\symbolfillervisitor.h">
+      <Filter>Syntax Tree\AST Visitors\Symbol Filler</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\tokens.cpp">
+      <Filter>Tokens</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\qualifiers.cpp">
+      <Filter>Qualifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\astnodes.cpp">
+      <Filter>Syntax Tree</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parser.cpp">
+      <Filter>Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\flags.cpp" />
+    <ClCompile Include="..\src\lexer.cpp">
+      <Filter>Lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dotfilevisitor.cpp">
+      <Filter>Syntax Tree\AST Visitors\Dotfile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\treedumpvisitor.cpp">
+      <Filter>Syntax Tree\AST Visitors\Tree Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\symbol.cpp">
+      <Filter>Symbol</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\symbolfillervisitor.cpp">
+      <Filter>Syntax Tree\AST Visitors\Symbol Filler</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
