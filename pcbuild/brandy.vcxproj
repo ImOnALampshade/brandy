@@ -75,6 +75,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\astnodes.h" />
     <ClInclude Include="..\src\dotfilevisitor.h" />
+    <ClInclude Include="..\src\functionreturnvisitor.h" />
     <ClInclude Include="..\src\lexer.h" />
     <ClInclude Include="..\src\flags.h" />
     <ClInclude Include="..\src\parser.h" />
@@ -93,6 +94,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\astnodes.cpp" />
     <ClCompile Include="..\src\dotfilevisitor.cpp" />
+    <ClCompile Include="..\src\functionreturnvisitor.cpp" />
     <ClCompile Include="..\src\lexer.cpp" />
     <ClCompile Include="..\src\flags.cpp" />
     <ClCompile Include="..\src\main.cpp" />

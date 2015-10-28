@@ -235,7 +235,9 @@ namespace brandy
     {
       std::string name = make_name("memberaccess", ptr);
 
-      fprintf(m_file, "  %s [shape=box,label=\"member access\"];\n", name.c_str());
+      fprintf(m_file, "  %s [shape=box,label=\"member access\\n", name.c_str());
+      token_to_file(m_file, node->member_name);
+      fputs("\"];\n", m_file);
 
       WALK_CHILDREN(name);
     }

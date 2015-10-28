@@ -411,6 +411,12 @@ namespace brandy
 
     propertyNode->name = last_token();
 
+    if (accept(token_types::COLON))
+    {
+      propertyNode->type = accept_type();
+      if (!propertyNode->type) REJECT_RULE_ERROR("No type following : in property definition");
+    }
+
     bool opened = accept(token_types::OPEN_CURLY);
 
     if (accept(token_types::GET))

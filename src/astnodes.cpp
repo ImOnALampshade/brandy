@@ -130,6 +130,7 @@ namespace brandy
   WALK_DECL(property_node)
   {
     WALK_BASE(symbol_node);
+    WALK(type);
     WALK(getter);
     WALK(setter);
     WALK(setter_value);

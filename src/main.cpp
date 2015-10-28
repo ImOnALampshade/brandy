@@ -3,18 +3,20 @@
 // Howard Hughes
 // -----------------------------------------------------------------------------
 
-#include "dotfilevisitor.h"
 #include "flags.h"
 #include "lexer.h"
 #include "parser.h"
-#include "symbolfillervisitor.h"
-#include "treedumpvisitor.h"
 #include <algorithm>
 #include <iostream>
 #include <memory>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+
+#include "functionreturnvisitor.h"
+#include "dotfilevisitor.h"
+#include "treedumpvisitor.h"
+#include "symbolfillervisitor.h"
 
 std::unique_ptr<char[]> load_file(const char *filename)
 {
@@ -62,6 +64,9 @@ int main(int argc, const char **argv)
   try
   {
     auto module = parser.parse_module();
+
+    brandy::function_return_visitor returnVisitor;
+    walk_node(module, &returnVisitor);
 
     if (brandy::compiler_flags::current().dump_ast())
     {

@@ -264,6 +264,7 @@ namespace brandy
 
   struct property_node : public symbol_node
   {
+    unique_ptr<type_node> type;
     unique_ptr<scope_node> getter;
     unique_ptr<scope_node> setter;
     unique_ptr<parameter_node> setter_value;

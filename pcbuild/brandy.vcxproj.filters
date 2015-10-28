@@ -31,6 +31,9 @@
     <Filter Include="Syntax Tree\AST Visitors\Symbol Filler">
       <UniqueIdentifier>{f98f980b-5c86-4b42-beb7-4a8609b35df2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Syntax Tree\AST Visitors\Function Return">
+      <UniqueIdentifier>{4be8aac9-c50b-47bf-9884-749b5df919a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\operatortokens.inl">
@@ -75,6 +78,9 @@
     <ClInclude Include="..\src\symbolfillervisitor.h">
       <Filter>Syntax Tree\AST Visitors\Symbol Filler</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\functionreturnvisitor.h">
+      <Filter>Syntax Tree\AST Visitors\Function Return</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\tokens.cpp">
@@ -105,6 +111,9 @@
     </ClCompile>
     <ClCompile Include="..\src\symbolfillervisitor.cpp">
       <Filter>Syntax Tree\AST Visitors\Symbol Filler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\functionreturnvisitor.cpp">
+      <Filter>Syntax Tree\AST Visitors\Function Return</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

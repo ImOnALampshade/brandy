@@ -98,7 +98,19 @@ namespace brandy
   {
     ast_visitor::visit(node);
     insert_node(node, node->name, symbol::property);
-    return ast_visitor::resume;
+
+    m_symStack.push_back(&node->getter->symbols);
+    walk_node(node->getter, this, false);
+    m_symStack.pop_back();
+
+    m_symStack.push_back(&node->setter->symbols);
+    
+    if (node->setter_value)
+      insert_node(node->setter_value.get(), node->setter_value->name, symbol::variable);
+    else
+      insert_node(nullptr, token("value", 5, token_types::IDENTIFIER), symbol::variable);
+
+    return ast_visitor::stop;
   }
 
   ast_visitor::visitor_result symbol_table_filler_visitor::visit(import_node *node)
