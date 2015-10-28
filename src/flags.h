@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <stack>
+#include <vector>
 
 // -----------------------------------------------------------------------------
 
@@ -19,16 +19,23 @@ namespace brandy
   class compiler_flags
   {
   public:
+    compiler_flags();
+
     bool parse_options(int argc, const char **argv);
 
     bool dump_parser_stack();
     bool dump_ast();
+    bool dump_ast_graph();
     const char *input_file();
 
     void push_options();
 
     static compiler_flags &current();
   private:
+    bool m_dumpParserStack;
+    bool m_dumpAst;
+    bool m_dumpAstGraph;
+    const char *m_inputFile;
   };
 
   // ---------------------------------------------------------------------------

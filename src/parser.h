@@ -10,6 +10,7 @@
 
 #include "astnodes.h"
 #include "tokens.h"
+#include <stack>
 #include <vector>
 
 // -----------------------------------------------------------------------------

@@ -20,36 +20,36 @@ namespace brandy
     public:
       node_printer()
       {
-        for (auto printer : active)
+        for (auto printer : alive_printers)
           (*this) << "  ";
 
-        active.push_back(this);
+        alive_printers.push_back(this);
       }
 
       node_printer(const std::string& text)
       {
-        for (size_t i = 0; i < active.size(); ++i)
+        for (size_t i = 0; i < alive_printers.size(); ++i)
           (*this) << "  ";
 
-        active.push_back(this);
+        alive_printers.push_back(this);
         (*this) << text;
       }
 
       ~node_printer()
       {
-        active.pop_back();
+        alive_printers.pop_back();
 
-        if (active.empty())
+        if (alive_printers.empty())
           printf("%s\n", this->str().c_str());
         else
-          (*active.back()) << "\n" << this->str();
+          (*alive_printers.back()) << "\n" << this->str();
       }
 
     private:
-      static std::vector<node_printer*> active;
+      static std::vector<node_printer*> alive_printers;
     };
 
-    std::vector<node_printer*> node_printer::active;
+    std::vector<node_printer*> node_printer::alive_printers;
   }
 
   // ---------------------------------------------------------------------------
