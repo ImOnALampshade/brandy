@@ -292,6 +292,9 @@ namespace brandy
       expect(token_types::CLOSE_PAREN);
     }
 
+    if (accept(token_types::DOCUMENTION_BLOCK))
+      classNode->docs = last_token();
+
     expect(token_types::OPEN_CURLY);
 
     while (!accept(token_types::CLOSE_CURLY))
@@ -338,6 +341,9 @@ namespace brandy
 
     functionNode->return_type = accept_type();
 
+    if (accept(token_types::DOCUMENTION_BLOCK))
+      functionNode->docs = last_token();
+
     functionNode->scope = accept_scope();
 
     if (!functionNode->scope)
@@ -369,6 +375,9 @@ namespace brandy
       varNode->expression = accept_expression();
       if (!varNode->expression) REJECT_RULE_ERROR("Variable assignment must be followed by an expression");
     }
+
+    if (accept(token_types::DOCUMENTION_BLOCK))
+      varNode->docs = last_token();
 
     ACCEPT_RULE(varNode);
   }
@@ -427,6 +436,9 @@ namespace brandy
       propertyNode->type = accept_type();
       if (!propertyNode->type) REJECT_RULE_ERROR("No type following : in property definition");
     }
+
+    if (accept(token_types::DOCUMENTION_BLOCK))
+      propertyNode->docs = last_token();
 
     bool opened = accept(token_types::OPEN_CURLY);
 

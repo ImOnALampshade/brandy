@@ -230,6 +230,7 @@ namespace brandy
   struct symbol_node : public statement_node
   {
     token name;
+    token docs;
     unique_ptr<attribute_node> attributes;
 
     ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;

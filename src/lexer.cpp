@@ -467,6 +467,18 @@ namespace brandy
       gBrandyLexer.add_edge(twoDot, tupleExpand, '.');
     }
 
+    {
+      auto docStart = gBrandyLexer.create_state();
+      auto docStr = gBrandyLexer.create_state();
+      auto docEnd = gBrandyLexer.create_state(token_types::DOCUMENTION_BLOCK);
+
+      gBrandyLexer.add_edge(root, docStart, '`');
+      gBrandyLexer.add_edge(docStart, docEnd, '`');
+      gBrandyLexer.add_default_edge(docStart, docStr);
+      gBrandyLexer.add_default_edge(docStr, docStr);
+      gBrandyLexer.add_edge(docStr, docEnd, '`');
+    }
+
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::META), "meta");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::IMPORT), "import");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::FUNCTION), "func");
