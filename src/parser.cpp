@@ -700,8 +700,8 @@ namespace brandy
     {
       token_types::SUBTRACT,
       token_types::BITWISE_NOT,
-      token_types::BITWISE_AND,
-      token_types::MULTIPLY,
+      token_types::AMPERSAND,
+      token_types::ASTRISK,
       token_types::LOGICAL_NOT
     };
 
@@ -774,7 +774,7 @@ namespace brandy
 
     static const token_types::type operators[] =
     {
-      token_types::MULTIPLY,
+      token_types::ASTRISK,
       token_types::DIVIDE,
       token_types::MODULO,
       token_types::INVALID
@@ -872,7 +872,7 @@ namespace brandy
 
     static const token_types::type operators[] =
     {
-      token_types::BITWISE_AND,
+      token_types::AMPERSAND,
       token_types::BITWISE_OR,
       token_types::BITWISE_XOR,
       token_types::INVALID
@@ -1319,6 +1319,7 @@ namespace brandy
   unique_ptr<type_node> parser::accept_type()
   {
     ENTER_RULE(type);
+    NEWLINE_GAURD();
 
     auto tupleNode = create_node<tuple_node>();
     auto delegateNode = create_node<delegate_node>();
@@ -1407,7 +1408,7 @@ namespace brandy
     auto arrayNode = create_node<type_array_node>();
     auto templateNode = create_node<type_template_node>();
 
-    if (accept(token_types::MULTIPLY) || accept(token_types::BITWISE_AND))
+    if (accept(token_types::ASTRISK) || accept(token_types::AMPERSAND))
     {
       indirectNode->indirection_type = last_token();
       ACCEPT_RULE(indirectNode);
@@ -1415,6 +1416,7 @@ namespace brandy
     else if (accept(token_types::OPEN_BRACKET))
     {
       arrayNode->array_size = accept_expression();
+      expect(token_types::CLOSE_BRACKET);
       ACCEPT_RULE(arrayNode);
     }
     else if (accept(token_types::OPEN_PAREN))
@@ -1441,7 +1443,7 @@ namespace brandy
 
   unique_ptr<qualifier_node> parser::accept_qualifier()
   {
-    // TODO: qualifiers
+    // TODO: Qualifiers
     return nullptr;
   }
 
@@ -1574,8 +1576,8 @@ namespace brandy
 
       return 
         m_current->type() != token_types::SUBTRACT &&
-        m_current->type() != token_types::BITWISE_AND &&
-        m_current->type() != token_types::MULTIPLY;
+        m_current->type() != token_types::AMPERSAND &&
+        m_current->type() != token_types::ASTRISK;
     }
   }
 

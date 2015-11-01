@@ -371,7 +371,7 @@ namespace brandy
 
     add_operator_edges(root, '+', token_types::ADD, token_types::ASSIGNMENT_ADD);
     add_operator_edges(root, '-', token_types::SUBTRACT, token_types::ASSIGNMENT_SUBTRACT);
-    add_operator_edges(root, '*', token_types::MULTIPLY, token_types::ASSIGNMENT_MULTIPLY);
+    add_operator_edges(root, '*', token_types::ASTRISK, token_types::ASSIGNMENT_MULTIPLY);
     add_operator_edges(root, '%', token_types::MODULO, token_types::ASSIGNMENT_MODULO);
     add_operator_edges(root, '^', token_types::BITWISE_XOR, token_types::ASSIGNMENT_BITWISE_XOR);
 
@@ -408,7 +408,7 @@ namespace brandy
     }
 
     {
-      auto bitwiseAnd = gBrandyLexer.create_state(token_types::BITWISE_AND);
+      auto bitwiseAnd = gBrandyLexer.create_state(token_types::AMPERSAND);
       auto logicalAnd = gBrandyLexer.create_state(token_types::LOGICAL_AND);
 
       auto bitwiseAndAssign = gBrandyLexer.create_state(token_types::ASSIGNMENT_BITWISE_AND);
