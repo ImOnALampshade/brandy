@@ -29,7 +29,7 @@ namespace brandy
     enum kind {
       function,
       variable,
-      class_name,
+      class_name, // AKA, class
       label,
       property,
       import,
@@ -43,12 +43,15 @@ namespace brandy
     const abstract_node &node() const;
     token                name() const;
     kind          symbol_type() const;
-    type                *type() const;
+    type            *var_type() const;
+
+    void var_type(type *t);
 
   private:
     token m_name;
     kind m_symbolType;
     abstract_node *m_node;
+    type *m_type;
   };
 
   // ---------------------------------------------------------------------------

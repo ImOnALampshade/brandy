@@ -43,7 +43,10 @@ namespace brandy
   struct call_node;
   struct cast_node;
   struct index_node;
+  struct tuple_expansion_node;
   struct literal_node;
+  struct tuple_literal_node;
+  struct table_literal_node;
   struct lambda_capture_node;
   struct lambda_node;
   struct name_reference_node;
@@ -57,6 +60,7 @@ namespace brandy
   struct while_node;
   struct for_node;
   struct import_node;
+  struct meta_node;
   struct typedef_node;
 
   struct type_node;
@@ -100,7 +104,10 @@ namespace brandy
     virtual ast_visitor::visitor_result visit(call_node *node);
     virtual ast_visitor::visitor_result visit(cast_node *node);
     virtual ast_visitor::visitor_result visit(index_node *node);
+    virtual ast_visitor::visitor_result visit(tuple_expansion_node *node);
     virtual ast_visitor::visitor_result visit(literal_node *node);
+    virtual ast_visitor::visitor_result visit(tuple_literal_node *node);
+    virtual ast_visitor::visitor_result visit(table_literal_node *node);
     virtual ast_visitor::visitor_result visit(lambda_capture_node *node);
     virtual ast_visitor::visitor_result visit(lambda_node *node);
     virtual ast_visitor::visitor_result visit(name_reference_node *node);
@@ -113,6 +120,7 @@ namespace brandy
     virtual ast_visitor::visitor_result visit(while_node *node);
     virtual ast_visitor::visitor_result visit(for_node *node);
     virtual ast_visitor::visitor_result visit(import_node *node);
+    virtual ast_visitor::visitor_result visit(meta_node *node);
     virtual ast_visitor::visitor_result visit(typedef_node *node);
     virtual ast_visitor::visitor_result visit(type_node *node);
     virtual ast_visitor::visitor_result visit(tuple_node *);
@@ -347,9 +355,32 @@ namespace brandy
     void internal_walk(ast_visitor *visitor) override;
   };
 
+  struct tuple_expansion_node : public post_expression_node
+  {
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
   struct literal_node : public expression_node
   {
     token value;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct tuple_literal_node : public expression_node
+  {
+    unique_vector<expression_node> items;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct table_literal_node : public expression_node
+  {
+    unique_vector<expression_node> keys;
+    unique_vector<expression_node> values;
 
     ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
     void internal_walk(ast_visitor *visitor) override;
@@ -469,6 +500,15 @@ namespace brandy
     void internal_walk(ast_visitor *visitor) override;
   };
 
+  struct meta_node : public statement_node
+  {
+    unique_vector<symbol_node> symbols;
+    unique_vector<statement_node> statements;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
   struct typedef_node : public symbol_node
   {
     unique_ptr<attribute_node> attributes;
@@ -482,7 +522,7 @@ namespace brandy
   // ---------------------------------------------------------------------------
   // Others
 
-  struct type_node : public abstract_node
+  struct type_node : public expression_node
   {
     ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
     void internal_walk(ast_visitor *visitor) override;

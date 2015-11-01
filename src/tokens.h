@@ -37,6 +37,7 @@ namespace brandy
   {
   public:
     token();
+    token(const char *str, token_types::type type);
     token(const char *str, size_t length, token_types::type type);
 
     const char       *text() const;

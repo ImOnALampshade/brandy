@@ -31,7 +31,10 @@ namespace brandy
   VISIT_BASE(call_node, post_expression_node)
   VISIT_BASE(cast_node, post_expression_node)
   VISIT_BASE(index_node, post_expression_node)
+  VISIT_BASE(tuple_expansion_node, post_expression_node)
   VISIT_BASE(literal_node, expression_node)
+  VISIT_BASE(tuple_literal_node, expression_node)
+  VISIT_BASE(table_literal_node, expression_node)
   VISIT_BASE(lambda_capture_node, abstract_node)
   VISIT_BASE(lambda_node, expression_node)
   VISIT_BASE(name_reference_node, expression_node)
@@ -44,6 +47,7 @@ namespace brandy
   VISIT_BASE(while_node, statement_node)
   VISIT_BASE(for_node, statement_node)
   VISIT_BASE(import_node, statement_node)
+  VISIT_BASE(meta_node, statement_node)
   VISIT_BASE(typedef_node, symbol_node)
   VISIT_BASE(type_node, abstract_node)
   VISIT_BASE(tuple_node, type_node)
@@ -181,9 +185,27 @@ namespace brandy
     WALK(index);
   }
 
+  WALK_DECL(tuple_expansion_node)
+  {
+    WALK_BASE(post_expression_node);
+  }
+
   WALK_DECL(literal_node)
   {
     WALK_BASE(expression_node);
+  }
+
+  WALK_DECL(tuple_literal_node)
+  {
+    WALK_BASE(expression_node);
+    WALK_ALL(items);
+  }
+
+  WALK_DECL(table_literal_node)
+  {
+    WALK_BASE(expression_node);
+    WALK_ALL(keys);
+    WALK_ALL(values);
   }
 
   WALK_DECL(lambda_capture_node)
@@ -261,6 +283,13 @@ namespace brandy
   WALK_DECL(import_node)
   {
     WALK_BASE(statement_node);
+  }
+
+  WALK_DECL(meta_node)
+  {
+    WALK_BASE(statement_node);
+    WALK_ALL(symbols);
+    WALK_ALL(statements);
   }
 
   WALK_DECL(typedef_node)

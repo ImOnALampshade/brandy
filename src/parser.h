@@ -66,7 +66,7 @@ namespace brandy
     unique_ptr<cast_node> accept_cast();
     unique_ptr<index_node> accept_index();
 
-    unique_ptr<literal_node> accept_literal();
+    unique_ptr<expression_node> accept_literal();
     unique_ptr<lambda_capture_node> accept_lambda_capture();
     unique_ptr<lambda_node> accept_lambda();
     unique_ptr<name_reference_node> accept_name_reference();
@@ -90,6 +90,7 @@ namespace brandy
     unique_ptr<expression_node> accept_bitwise_conjunction();
     unique_ptr<expression_node> accept_logical_conjunction();
     unique_ptr<expression_node> accept_assignment();
+    unique_ptr<expression_node> accept_typename();
 
     unique_ptr<statement_node> accept_delimited_statement();
     unique_ptr<statement_node> accept_goto();
@@ -104,6 +105,7 @@ namespace brandy
     unique_ptr<while_node> accept_while();
     unique_ptr<for_node> accept_for();
     unique_ptr<import_node> accept_import();
+    unique_ptr<meta_node> accept_meta();
     unique_ptr<typedef_node> accept_typedef();
 
     unique_ptr<type_node> accept_type();

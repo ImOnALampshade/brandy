@@ -27,6 +27,11 @@ namespace brandy
   const abstract_node &symbol::node() const { return *m_node; }
   token                symbol::name() const { return m_name; }
   symbol::kind  symbol::symbol_type() const { return m_symbolType; }
+  type            *symbol::var_type() const { return m_type; }
+
+  // ---------------------------------------------------------------------------
+
+  void symbol::var_type(type *t) { m_type = t; }
 
   // ---------------------------------------------------------------------------
 }

@@ -103,17 +103,17 @@ namespace brandy
   {
     fputs("digraph G {\n", f);
 
-    auto add_edge = [this,f](const state &from, const char *name, size_t i)
+    auto add_edge = [this, f](const state &from, const char *name, size_t i)
     {
       if (i == INVALID_EDGE) return;
       const state &to = m_states[i];
 
-      fprintf(f, "  %s%i -> %s%i [label=\"%s\"];\n", 
+      fprintf(f, "  %s%i -> %s%i [label=\"%s\"];\n",
         token_types::names[from.accept], from.index,
         token_types::names[to.accept], to.index,
         name);
     };
-    
+
     for (const state &s1 : m_states)
     {
       fprintf(f, "  %s%i [label=\"", token_types::names[s1.accept], s1.index);
@@ -247,7 +247,7 @@ namespace brandy
       auto newline = gBrandyLexer.create_state(token_types::NEWLINE);
       gBrandyLexer.add_edge(root, newline, '\n');
     }
-    
+
     {
       auto at = gBrandyLexer.create_state();
       auto attribute = gBrandyLexer.create_state(token_types::ATTRIBUTE_START);
@@ -267,24 +267,38 @@ namespace brandy
     }
 
     {
-      auto integer = gBrandyLexer.create_state(token_types::INTEGER_LITERAL);
+      auto lit_i8 = gBrandyLexer.create_state(token_types::I8_LITERAL);
+      auto lit_i16 = gBrandyLexer.create_state(token_types::I16_LITERAL);
+      auto lit_i32 = gBrandyLexer.create_state(token_types::I32_LITERAL);
+      auto lit_i64 = gBrandyLexer.create_state(token_types::I64_LITERAL);
       auto dot = gBrandyLexer.create_state();
-      auto decimal = gBrandyLexer.create_state(token_types::FLOAT_LITERAL);
+      auto lit_f32 = gBrandyLexer.create_state(token_types::F32_LITERAL);
+      auto lit_f64 = gBrandyLexer.create_state(token_types::F64_LITERAL);
       auto exp = gBrandyLexer.create_state();
       auto expPlus = gBrandyLexer.create_state();
       auto expMinus = gBrandyLexer.create_state();
-      auto expVal = gBrandyLexer.create_state(token_types::FLOAT_LITERAL);
+      auto expVal = gBrandyLexer.create_state(token_types::F64_LITERAL);
 
-      gBrandyLexer.add_number_edge(root, integer);
-      gBrandyLexer.add_number_edge(integer, integer);
+      gBrandyLexer.add_number_edge(root, lit_i32);
+      gBrandyLexer.add_number_edge(lit_i32, lit_i32);
+      gBrandyLexer.add_edge(lit_i32, lit_i8, 'b');
+      gBrandyLexer.add_edge(lit_i32, lit_i8, 'B');
+      gBrandyLexer.add_edge(lit_i32, lit_i16, 's');
+      gBrandyLexer.add_edge(lit_i32, lit_i16, 'S');
+      gBrandyLexer.add_edge(lit_i32, lit_i64, 'l');
+      gBrandyLexer.add_edge(lit_i32, lit_i64, 'L');
+      gBrandyLexer.add_edge(lit_i32, lit_f32, 'f');
+      gBrandyLexer.add_edge(lit_i32, lit_f32, 'F');
 
-      gBrandyLexer.add_edge(integer, dot, '.');
+      gBrandyLexer.add_edge(lit_i32, dot, '.');
 
-      gBrandyLexer.add_number_edge(dot, decimal);
-      gBrandyLexer.add_number_edge(decimal, decimal);
+      gBrandyLexer.add_number_edge(dot, lit_f64);
+      gBrandyLexer.add_number_edge(lit_f64, lit_f64);
+      gBrandyLexer.add_edge(lit_f64, lit_f32, 'f');
+      gBrandyLexer.add_edge(lit_f64, lit_f32, 'F');
 
-      gBrandyLexer.add_edge(decimal, exp, 'e');
-      gBrandyLexer.add_edge(decimal, exp, 'E');
+      gBrandyLexer.add_edge(lit_f64, exp, 'e');
+      gBrandyLexer.add_edge(lit_f64, exp, 'E');
 
       gBrandyLexer.add_edge(exp, expPlus, '+');
       gBrandyLexer.add_edge(exp, expMinus, '-');
@@ -292,6 +306,8 @@ namespace brandy
       gBrandyLexer.add_number_edge(expPlus, expVal);
       gBrandyLexer.add_number_edge(expMinus, expVal);
       gBrandyLexer.add_number_edge(expVal, expVal);
+      gBrandyLexer.add_edge(expVal, lit_f32, 'f');
+      gBrandyLexer.add_edge(expVal, lit_f32, 'F');
     }
 
     {
@@ -441,6 +457,16 @@ namespace brandy
       gBrandyLexer.add_edge(not, inequality, '=');
     }
 
+    {
+      auto dot = gBrandyLexer.create_state(token_types::DOT);
+      auto twoDot = gBrandyLexer.create_state();
+      auto tupleExpand = gBrandyLexer.create_state(token_types::TUPLE_EXPANSION);
+
+      gBrandyLexer.add_edge(root, dot, '.');
+      gBrandyLexer.add_edge(dot, twoDot, '.');
+      gBrandyLexer.add_edge(twoDot, tupleExpand, '.');
+    }
+
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::META), "meta");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::IMPORT), "import");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::FUNCTION), "func");
@@ -484,12 +510,12 @@ namespace brandy
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::REFERENCE), "reference");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::TYPEDEF), "typedef");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::DECLTYPE), "decltype");
-    
+    add_keyword(root, identifier, gBrandyLexer.create_state(token_types::TYPENAME), "typename");
+
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::BITWISE_NOT), '~');
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::COLON), ':');
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::SEMICOLON), ';');
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::COMMA), ',');
-    gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::DOT), '.');
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::OPEN_CURLY), '{');
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::CLOSE_CURLY), '}');
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::OPEN_PAREN), '(');

@@ -38,14 +38,20 @@ namespace brandy
     void set_base(type *base);
     void add_member(const token &name, symbol_node *node);
 
-    bool is_builtin() const;
+    bool is_primitive() const;
+    bool is_any_float() const;
+    bool is_any_int() const;
 
     symbol_node *get_member(const token &name);
 
-    static type *common(const type &t1, const type &t2);
+    static type *common(const type *t1, const type *t2);
+
+    bool check_flag_all(flags flag) const;
+    bool check_flag_any(flags flag) const;
+    void set_flag(flags flag, bool value);
   private:
     type *m_base;
-    flags m_flags;
+    std::uint32_t m_flags;
     std::unordered_map<token, symbol_node *> m_members;
   };
 

@@ -3,10 +3,10 @@ meta
   import compiler
 
   @[CacheResults()]
-  func vector(type as typename) : typename
+  func vector(item_type as type) type
   {
     return compiler.compile_class(_vector, {
-      "item_type": type
+      "item_type": item_type
     })
   }
 }
@@ -43,11 +43,11 @@ class _vector
     m_size += 1
   }
 
-  property front:
+  property front: item_type
     get: m_items[0]
     set item: m_items[0] = item
 
-  property back:
+  property back: item_type
     get: m_items[m_size - 1]
     set item: m_items[m_size - 1] = item
 

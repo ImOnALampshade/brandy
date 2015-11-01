@@ -28,6 +28,14 @@ namespace brandy
   {
   }
 
+  token::token(const char *str, token_types::type type) :
+    m_text(str),
+    m_len(strlen(m_text)),
+    m_tokType(type),
+    m_lineNum(0)
+  {
+  }
+
   token::token(const char *str, size_t length, token_types::type type) :
     m_text(str),
     m_len(length),

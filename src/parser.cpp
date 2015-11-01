@@ -239,6 +239,12 @@ namespace brandy
         indexNode->left = move(leftNode);
         leftNode = move(indexNode);
       }
+      else if (accept(token_types::TUPLE_EXPANSION))
+      {
+        auto tupleExpansionNode = create_node<tuple_expansion_node>();
+        tupleExpansionNode->left = move(leftNode);
+        leftNode = move(tupleExpansionNode);
+      }
       else
         ACCEPT_RULE(leftNode);
     }
@@ -329,7 +335,7 @@ namespace brandy
 
       expect(token_types::CLOSE_PAREN);
     }
-      
+
     functionNode->return_type = accept_type();
 
     functionNode->scope = accept_scope();
@@ -550,29 +556,69 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
-  unique_ptr<literal_node> parser::accept_literal()
+  unique_ptr<expression_node> parser::accept_literal()
   {
     ENTER_RULE(literal);
 
-    static const token_types::type literals[] =
-    {
-      token_types::INTEGER_LITERAL,
-      token_types::FLOAT_LITERAL,
-      token_types::STRING_LITERAL,
-      token_types::CHAR_LITERAL,
-      token_types::TRUE,
-      token_types::FALSE,
-      token_types::NIL,
-    };
-
     auto literalNode = create_node<literal_node>();
-    for (token_types::type allow : literals)
+
+    for (int allow = token_types::START_LITERAL + 1; allow != token_types::END_LITERAL; ++allow)
     {
-      if (accept(allow))
+      if (accept(static_cast<token_types::type>(allow)))
       {
         literalNode->value = last_token();
 
         ACCEPT_RULE(literalNode);
+      }
+    }
+
+    auto tupleNode = create_node<tuple_literal_node>();
+    auto tableNode = create_node<table_literal_node>();
+
+    if (accept(token_types::OPEN_CURLY))
+    {
+      auto firstExp = accept_expression();
+      if (!firstExp) REJECT_RULE_ERROR("No expression following open brace, brandy does not support empty tuple/table literals");
+
+      if (accept(token_types::COLON))
+      {
+        auto firstVal = accept_expression();
+        if (!firstVal) REJECT_RULE_ERROR("No value following colon in table literal");
+
+        tableNode->keys.push_back(move(firstExp));
+        tableNode->values.push_back(move(firstVal));
+
+        while (accept(token_types::COMMA))
+        {
+          auto key = accept_expression();
+          if (!key) REJECT_RULE_ERROR("No key following comma in table literal");
+          expect(token_types::COLON);
+          auto val = accept_expression();
+          if (!val) REJECT_RULE_ERROR("No value following colon in table literal");
+
+          tableNode->keys.push_back(move(key));
+          tableNode->values.push_back(move(val));
+        }
+
+        expect(token_types::CLOSE_CURLY);
+        
+        ACCEPT_RULE(tableNode);
+      }
+      else
+      {
+        tupleNode->items.push_back(move(firstExp));
+
+        while (accept(token_types::COMMA))
+        {
+          auto item = accept_expression();
+          if (!item) REJECT_RULE_ERROR("No expression following comma in tuple literal");
+
+          tupleNode->items.push_back(move(item));
+        }
+
+        expect(token_types::CLOSE_CURLY);
+
+        ACCEPT_RULE(tupleNode);
       }
     }
 
@@ -594,7 +640,7 @@ namespace brandy
     }
     else if (auto name = accept_name_reference())
     {
-      captureNode->capture_type = token("ref", 3, token_types::REFERENCE);
+      captureNode->capture_type = token("ref", token_types::REFERENCE);
       captureNode->name = move(name);
       ACCEPT_RULE(captureNode);
     }
@@ -686,6 +732,8 @@ namespace brandy
       accept(token_types::CLOSE_PAREN);
       ACCEPT_RULE(node);
     }
+    else if (auto type = accept_typename())
+      ACCEPT_RULE(type);
 
     REJECT_RULE();
   }
@@ -935,6 +983,26 @@ namespace brandy
       REJECT_RULE();
   }
 
+  unique_ptr<expression_node> parser::accept_typename()
+  {
+    ENTER_RULE(typename);
+
+    auto start = m_current;
+
+    if (!accept(token_types::TYPENAME))
+      REJECT_RULE();
+
+    bool opened = accept(token_types::OPEN_PAREN);
+
+    auto typeNode = accept_type();
+    if (!typeNode) REJECT_RULE_ERROR("No type following typename");
+
+    if (opened) expect(token_types::CLOSE_PAREN);
+
+    typeNode->begin = start;
+    ACCEPT_RULE(typeNode);
+  }
+
   // ---------------------------------------------------------------------------
 
   unique_ptr<statement_node> parser::accept_delimited_statement()
@@ -961,22 +1029,22 @@ namespace brandy
 
 #define CONDITIONAL_STATEMENT(name) \
   do \
-            { \
+    { \
     NEWLINE_GAURD();\
     auto ifNode = create_node<if_node>();\
     if (accept(token_types::IF)) \
-                        {\
+        {\
       ifNode->condition = accept_expression();\
       if(!ifNode->condition) REJECT_RULE_ERROR("No condotion on a conditional " #name);\
       ifNode->scope = create_node<scope_node>();\
       name##Node->end = m_current;\
       ifNode->scope->statements.push_back(move(name##Node));\
       ACCEPT_RULE(ifNode);\
-                        }\
-                                                                                                                                else if (accept(token_types::UNLESS))\
-              {\
+        }\
+        else if (accept(token_types::UNLESS))\
+      {\
       auto notNode = create_node<unary_operator_node>();\
-      notNode->operation = token("!", 1, token_types::LOGICAL_NOT);\
+      notNode->operation = token("!", token_types::LOGICAL_NOT);\
       notNode->expression = accept_expression();\
       if (!notNode->expression) REJECT_RULE_ERROR("No condition on a conditional " #name);\
       notNode->end = m_current;\
@@ -985,8 +1053,8 @@ namespace brandy
       name##Node->end = m_current;\
       ifNode->scope->statements.push_back(move(name##Node));\
       ACCEPT_RULE(ifNode);\
-              }\
-            } while (false)\
+      }\
+    } while (false)\
 
   unique_ptr<statement_node> parser::accept_goto()
   {
@@ -1044,7 +1112,7 @@ namespace brandy
     if (!accept(token_types::BREAK))
       REJECT_RULE();
 
-    if (accept(token_types::INTEGER_LITERAL))
+    if (accept(token_types::I32_LITERAL))
       breakNode->count = last_token();
 
     CONDITIONAL_STATEMENT(break);
@@ -1060,7 +1128,7 @@ namespace brandy
     if (!accept(token_types::BREAK))
       REJECT_RULE();
 
-    if (accept(token_types::INTEGER_LITERAL))
+    if (accept(token_types::I32_LITERAL))
       continueNode->count = last_token();
 
     CONDITIONAL_STATEMENT(continue);
@@ -1082,6 +1150,8 @@ namespace brandy
       ACCEPT_RULE(forNode);
     else if (auto importNode = accept_import())
       ACCEPT_RULE(importNode);
+    else if (auto metaNode = accept_meta())
+      ACCEPT_RULE(metaNode);
     else
       REJECT_RULE();
   }
@@ -1106,7 +1176,7 @@ namespace brandy
     else if (accept(token_types::UNLESS))
     {
       auto notNode = create_node<unary_operator_node>();
-      notNode->operation = token("!", 1, token_types::LOGICAL_NOT);
+      notNode->operation = token("!", token_types::LOGICAL_NOT);
       notNode->expression = accept_expression();
       if (!notNode->expression) REJECT_RULE_ERROR("No codnition given for unless statement");
 
@@ -1175,7 +1245,7 @@ namespace brandy
     else if (accept(token_types::UNTIL))
     {
       auto notNode = create_node<unary_operator_node>();
-      notNode->operation = token("!", 1, token_types::LOGICAL_NOT);
+      notNode->operation = token("!", token_types::LOGICAL_NOT);
       notNode->expression = accept_expression();
       if (!notNode->expression) REJECT_RULE_ERROR("No condition given for until statement");
 
@@ -1255,17 +1325,11 @@ namespace brandy
     ENTER_RULE(import);
 
     auto importNode = create_node<import_node>();
-    bool meta = false;
-
-    if (accept(token_types::META))
-    {
-      expect(token_types::IMPORT);
-      meta = true;
-    }
-    else if (!accept(token_types::IMPORT))
-    {
+    
+    if (!accept(token_types::IMPORT))
       REJECT_RULE();
-    }
+
+    importNode->is_meta = accept(token_types::META);
 
     expect(token_types::IDENTIFIER);
     importNode->name_path.push_back(last_token());
@@ -1289,8 +1353,32 @@ namespace brandy
     ACCEPT_RULE(importNode);
   }
 
+  unique_ptr<meta_node> parser::accept_meta()
+  {
+    ENTER_RULE(meta);
+
+    auto metaNode = create_node<meta_node>();
+
+    if (!accept(token_types::META))
+      REJECT_RULE();
+
+    expect(token_types::OPEN_CURLY);
+
+    while (!accept(token_types::CLOSE_CURLY))
+    {
+      if (auto statement = accept_statement())
+        metaNode->statements.push_back(move(statement));
+      else if (auto symbol = accept_symbol())
+        metaNode->symbols.push_back(move(symbol));
+      else
+        REJECT_RULE_ERROR("Meta blocks can only contain symbols and statements");
+    }
+
+    ACCEPT_RULE(metaNode);
+  }
+
   // ---------------------------------------------------------------------------
-  
+
   unique_ptr<typedef_node> parser::accept_typedef()
   {
     ENTER_RULE(typedef);
@@ -1300,7 +1388,7 @@ namespace brandy
     if (accept(token_types::TYPEDEF))
     {
       expect(token_types::IDENTIFIER);
-      
+
       typedefNode->name = last_token();
 
       accept(token_types::AS);
@@ -1574,7 +1662,7 @@ namespace brandy
           return true;
       }
 
-      return 
+      return
         m_current->type() != token_types::SUBTRACT &&
         m_current->type() != token_types::AMPERSAND &&
         m_current->type() != token_types::ASTRISK;

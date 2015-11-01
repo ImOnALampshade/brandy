@@ -1,12 +1,12 @@
 meta
 {
-  import compiler;
+  import compiler
 
   @[CacheResults()]
-  func constructor_call(type as typename, arg_types as typename[])
+  func constructor_call(create_type as type, arg_types as type[])
   {
     return compiler.compile_class(_constructor_call, {
-      "type": type,
+      "type": create_type,
       "arg_types": arg_types
     })
   }
@@ -20,28 +20,28 @@ func __free(addr as byte *) void: nil
 
 class _constructor_call
 {
-  typedef type as decltype nil
+  typedef create_type as decltype nil
   typedef arg_types as { decltype nil }
-  typedef @implicitly_convert as type
+  typedef @implicitly_convert as create_type
 
   var m_args : arg_types
 
-  inline func @create(args as arg_types) void
+  func @create(args as arg_types) void
   {
     m_args = args
   }
 
-  inline func @call(mem as byte[] *) void
+  func @call(mem as byte[] *) void
   {
-    __ptr_cast(type)(mem).@create(m_args...)
+    __ptr_cast(create_type)(mem).@create(m_args...)
   }
 }
 
-inline func @alloc(@[no_implicit_conversion()] ctor)
+func @alloc(@[no_implicit_conversion()] ctor)
 {
   mem = __malloc()
   ctor(mem)
-  return mem.as_reference(ctor.type)
+  return mem.as_reference(ctor.create_type)
 }
 
 func @free(@[pointer] obj)
