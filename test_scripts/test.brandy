@@ -1,7 +1,0 @@
-import stdio
-
-foo = lambda x,y,cb: (cb x y) * (cb x y)
-
-x = foo 2, 3, lambda a,b: a+b
-
-stdio.stdout.print x

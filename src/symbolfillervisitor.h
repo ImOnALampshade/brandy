@@ -30,10 +30,11 @@ namespace brandy
     ast_visitor::visitor_result visit(label_node *node) override;
     ast_visitor::visitor_result visit(property_node *node) override;
     ast_visitor::visitor_result visit(import_node *node) override;
+    ast_visitor::visitor_result visit(typedef_node *node) override;
 
     ast_visitor::visitor_result visit(binary_operator_node *node) override;
   private:
-    void insert_node(abstract_node *node, const token &name, symbol::type type);
+    void insert_node(abstract_node *node, const token &name, symbol::kind type);
 
     symbol_stack m_symStack;
   };

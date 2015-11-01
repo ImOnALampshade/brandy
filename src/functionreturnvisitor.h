@@ -20,6 +20,7 @@ namespace brandy
   {
     virtual ast_visitor::visitor_result visit(function_node *node);
     virtual ast_visitor::visitor_result visit(lambda_node *node);
+    virtual ast_visitor::visitor_result visit(property_node *node);
   };
 
   // ---------------------------------------------------------------------------

@@ -1,0 +1,54 @@
+meta
+{
+  import compiler;
+
+  @[CacheResults()]
+  func constructor_call(type as typename, arg_types as typename[])
+  {
+    return compiler.compile_class(_constructor_call, {
+      "type": type,
+      "arg_types": arg_types
+    })
+  }
+}
+
+@[c_call("brandy-runtime.dll", "buf_malloc")]
+func __malloc(size as iarch) byte *: nil
+
+@[c_call("brandy-runtime.dll", "buf_free")]
+func __free(addr as byte *) void: nil
+
+class _constructor_call
+{
+  typedef type as decltype nil
+  typedef arg_types as { decltype nil }
+  typedef @implicitly_convert as type
+
+  var m_args : arg_types
+
+  inline func @create(args as arg_types) void
+  {
+    m_args = args
+  }
+
+  inline func @call(mem as byte[] *) void
+  {
+    __ptr_cast(type)(mem).@create(m_args...)
+  }
+}
+
+inline func @alloc(@[no_implicit_conversion()] ctor)
+{
+  mem = __malloc()
+  ctor(mem)
+  return mem.as_reference(ctor.type)
+}
+
+func @free(@[pointer] obj)
+{
+  obj.@destroy()
+  __free(obj)
+}
+
+var x = alloc something(5)
+free x

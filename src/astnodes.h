@@ -57,8 +57,19 @@ namespace brandy
   struct while_node;
   struct for_node;
   struct import_node;
+  struct typedef_node;
 
   struct type_node;
+  struct tuple_node;
+  struct delegate_node;
+  struct plain_type_node;
+  struct decltype_node;
+
+  struct post_type_node;
+  struct type_indirect_node;
+  struct type_array_node;
+  struct type_template_node;
+
   struct qualifier_node;
   struct attribute_node;
   struct scope_node;
@@ -102,7 +113,16 @@ namespace brandy
     virtual ast_visitor::visitor_result visit(while_node *node);
     virtual ast_visitor::visitor_result visit(for_node *node);
     virtual ast_visitor::visitor_result visit(import_node *node);
+    virtual ast_visitor::visitor_result visit(typedef_node *node);
     virtual ast_visitor::visitor_result visit(type_node *node);
+    virtual ast_visitor::visitor_result visit(tuple_node *);
+    virtual ast_visitor::visitor_result visit(delegate_node *);
+    virtual ast_visitor::visitor_result visit(plain_type_node *);
+    virtual ast_visitor::visitor_result visit(decltype_node *);
+    virtual ast_visitor::visitor_result visit(post_type_node *node);
+    virtual ast_visitor::visitor_result visit(type_indirect_node *node);
+    virtual ast_visitor::visitor_result visit(type_array_node *node);
+    virtual ast_visitor::visitor_result visit(type_template_node *node);
     virtual ast_visitor::visitor_result visit(qualifier_node *node);
     virtual ast_visitor::visitor_result visit(attribute_node *node);
     virtual ast_visitor::visitor_result visit(scope_node *node);
@@ -449,13 +469,85 @@ namespace brandy
     void internal_walk(ast_visitor *visitor) override;
   };
 
+  struct typedef_node : public symbol_node
+  {
+    unique_ptr<attribute_node> attributes;
+    token name;
+    unique_ptr<type_node> type;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
   // ---------------------------------------------------------------------------
   // Others
 
   struct type_node : public abstract_node
   {
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct tuple_node : public type_node
+  {
+    unique_vector<type_node> inner_types;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct delegate_node : public type_node
+  {
+    unique_vector<type_node> parameter_types;
+    unique_ptr<type_node> return_type;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+  
+  struct plain_type_node : public type_node
+  {
     std::vector<token> name;
     unique_vector<qualifier_node> qualifiers;
+    unique_vector<post_type_node> post_type;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct decltype_node : public type_node
+  {
+    unique_ptr<expression_node> decltype_expression;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct post_type_node : public abstract_node
+  {
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct type_indirect_node : public post_type_node
+  {
+    token indirection_type;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct type_array_node : public post_type_node
+  {
+    unique_ptr<expression_node> array_size;
+
+    ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
+    void internal_walk(ast_visitor *visitor) override;
+  };
+
+  struct type_template_node : public post_type_node
+  {
+    unique_vector<expression_node> template_parameters;
 
     ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
     void internal_walk(ast_visitor *visitor) override;

@@ -1,0 +1,12 @@
+var my_int : int                          // int
+var my_int_ptr : int *                    // int *
+var my_int_ref : int &                    // std::shared_ptr<int>
+var my_int_arr : int[SIZE]                // int[SIZE]
+var my_int_arr_ptr : int[] *              // int *
+var my_int_arr_ref : int[] &              // std::shared_ptr<int[]>
+var my_const_int : const int              // const int
+var my_const_int_ptr : const int *        // const int *
+var my_int_int : { int, int }             // std::tuple<int, int>
+var my_function : function(int, int) void // std::function<void(int,int)>
+
+// var my_int_arr : int[]                 // int[] (invalid except as function parameter or class member)

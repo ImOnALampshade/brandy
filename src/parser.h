@@ -104,8 +104,11 @@ namespace brandy
     unique_ptr<while_node> accept_while();
     unique_ptr<for_node> accept_for();
     unique_ptr<import_node> accept_import();
+    unique_ptr<typedef_node> accept_typedef();
 
     unique_ptr<type_node> accept_type();
+    unique_ptr<post_type_node> accept_post_type_node();
+
     unique_ptr<qualifier_node> accept_qualifier();
     unique_ptr<attribute_node> accept_attribute();
     unique_ptr<scope_node> accept_scope();

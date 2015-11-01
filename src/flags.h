@@ -38,6 +38,8 @@ namespace brandy
     const char *m_inputFile;
   };
 
+#define CURRENT_FLAGS (brandy::compiler_flags::current())
+
   // ---------------------------------------------------------------------------
 }
 

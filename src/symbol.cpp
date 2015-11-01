@@ -11,7 +11,7 @@ namespace brandy
 {
   // ---------------------------------------------------------------------------
 
-  symbol::symbol(const token &name, type symbolType, abstract_node *node) :
+  symbol::symbol(const token &name, kind symbolType, abstract_node *node) :
     m_name(name),
     m_symbolType(symbolType),
     m_node(node)
@@ -26,7 +26,7 @@ namespace brandy
 
   const abstract_node &symbol::node() const { return *m_node; }
   token                symbol::name() const { return m_name; }
-  symbol::type  symbol::symbol_type() const { return m_symbolType; }
+  symbol::kind  symbol::symbol_type() const { return m_symbolType; }
 
   // ---------------------------------------------------------------------------
 }

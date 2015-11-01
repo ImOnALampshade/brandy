@@ -26,7 +26,7 @@ namespace brandy
     ast_visitor::visit(node);
 
     insert_node(node, node->name, symbol::class_name);
-    
+
     m_symStack.push_back(&node->symbols);
     walk_node(node, this, false);
     m_symStack.pop_back();
@@ -36,19 +36,19 @@ namespace brandy
   ast_visitor::visitor_result symbol_table_filler_visitor::visit(scope_node *node)
   {
     ast_visitor::visit(node);
-    
+
     m_symStack.push_back(&node->symbols);
     walk_node(node, this, false);
-    m_symStack.pop_back();  
+    m_symStack.pop_back();
     return ast_visitor::stop;
   }
 
   // ---------------------------------------------------------------------------
-  
+
   ast_visitor::visitor_result symbol_table_filler_visitor::visit(lambda_node *node)
   {
     ast_visitor::visit(node);
-    
+
     m_symStack.push_back(&node->scope->symbols);
 
     for (auto &param : node->parameters)
@@ -99,16 +99,22 @@ namespace brandy
     ast_visitor::visit(node);
     insert_node(node, node->name, symbol::property);
 
-    m_symStack.push_back(&node->getter->symbols);
-    walk_node(node->getter, this, false);
-    m_symStack.pop_back();
+    if (node->getter)
+    {
+      m_symStack.push_back(&node->getter->symbols);
+      walk_node(node->getter, this, false);
+      m_symStack.pop_back();
+    }
 
-    m_symStack.push_back(&node->setter->symbols);
-    
-    if (node->setter_value)
-      insert_node(node->setter_value.get(), node->setter_value->name, symbol::variable);
-    else
-      insert_node(nullptr, token("value", 5, token_types::IDENTIFIER), symbol::variable);
+    if (node->setter)
+    {
+      m_symStack.push_back(&node->setter->symbols);
+      if (node->setter_value)
+        insert_node(node->setter_value.get(), node->setter_value->name, symbol::variable);
+      else
+        insert_node(nullptr, token("value", 5, token_types::IDENTIFIER), symbol::variable);
+      m_symStack.pop_back();
+    }
 
     return ast_visitor::stop;
   }
@@ -120,8 +126,15 @@ namespace brandy
     return ast_visitor::resume;
   }
 
+  ast_visitor::visitor_result symbol_table_filler_visitor::visit(typedef_node *node)
+  {
+    ast_visitor::visit(node);
+    insert_node(node, node->name, symbol::typedef_name);
+    return ast_visitor::resume;
+  }
+
   // ---------------------------------------------------------------------------
-  
+
   ast_visitor::visitor_result symbol_table_filler_visitor::visit(binary_operator_node *node)
   {
     ast_visitor::visit(node);
@@ -131,7 +144,7 @@ namespace brandy
     if (auto nameRef = dynamic_cast<name_reference_node *>(node->left.get()))
     {
       auto &table = *m_symStack.back();
-      
+
       for (auto table : m_symStack)
       {
         // If this table has the name we're looking for in it, then return
@@ -148,8 +161,8 @@ namespace brandy
   }
 
   // ---------------------------------------------------------------------------
-  
-  void symbol_table_filler_visitor::insert_node(abstract_node *node, const token &name, symbol::type type)
+
+  void symbol_table_filler_visitor::insert_node(abstract_node *node, const token &name, symbol::kind type)
   {
     auto &table = *m_symStack.back();
     auto found = table.find(name);
@@ -164,7 +177,7 @@ namespace brandy
       // TODO: Emit name error, variable redefinition in same scope
     }
   }
-  
+
   // ---------------------------------------------------------------------------
 }
 

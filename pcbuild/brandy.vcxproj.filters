@@ -34,6 +34,9 @@
     <Filter Include="Syntax Tree\AST Visitors\Function Return">
       <UniqueIdentifier>{4be8aac9-c50b-47bf-9884-749b5df919a7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Types">
+      <UniqueIdentifier>{e447f871-4920-469b-8f2b-c6d9d94148e7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\operatortokens.inl">
@@ -81,6 +84,9 @@
     <ClInclude Include="..\src\functionreturnvisitor.h">
       <Filter>Syntax Tree\AST Visitors\Function Return</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\type.h">
+      <Filter>Types</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\tokens.cpp">
@@ -114,6 +120,9 @@
     </ClCompile>
     <ClCompile Include="..\src\functionreturnvisitor.cpp">
       <Filter>Syntax Tree\AST Visitors\Function Return</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\type.cpp">
+      <Filter>Types</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

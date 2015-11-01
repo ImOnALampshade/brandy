@@ -187,6 +187,11 @@ namespace brandy
       propertyNode->attributes = move(attributes);
       ACCEPT_RULE(propertyNode);
     }
+    else if (auto typedefNode = accept_typedef())
+    {
+      typedefNode->attributes = move(attributes);
+      ACCEPT_RULE(typedefNode);
+    }
     else if (attributes)
     {
       REJECT_RULE_ERROR("Attributes have no matching symbol");
@@ -306,26 +311,26 @@ namespace brandy
 
     functionNode->name = last_token();
 
-    bool opened = accept(token_types::OPEN_PAREN);
-
-    if (auto firstParam = accept_parameter())
+    if (accept(token_types::OPEN_PAREN))
     {
-      functionNode->parameters.push_back(move(firstParam));
 
-      while (accept(token_types::COMMA))
+      if (auto firstParam = accept_parameter())
       {
-        auto param = accept_parameter();
-        if (!param) REJECT_RULE_ERROR("Comma in function called not followed by a parameter");
+        functionNode->parameters.push_back(move(firstParam));
 
-        functionNode->parameters.push_back(move(param));
+        while (accept(token_types::COMMA))
+        {
+          auto param = accept_parameter();
+          if (!param) REJECT_RULE_ERROR("Comma in function called not followed by a parameter");
+
+          functionNode->parameters.push_back(move(param));
+        }
       }
-    }
 
-    if (opened)
-    {
       expect(token_types::CLOSE_PAREN);
-      functionNode->return_type = accept_type();
     }
+      
+    functionNode->return_type = accept_type();
 
     functionNode->scope = accept_scope();
 
@@ -491,7 +496,7 @@ namespace brandy
       if (auto fistParam = accept_expression())
       {
         pop_skip_newlines();
-        
+
         callNode->parameters.push_back(move(fistParam));
 
         while (accept(token_types::COMMA))
@@ -503,7 +508,7 @@ namespace brandy
 
         ACCEPT_RULE(callNode);
       }
-      
+
       pop_skip_newlines();
     }
 
@@ -695,6 +700,8 @@ namespace brandy
     {
       token_types::SUBTRACT,
       token_types::BITWISE_NOT,
+      token_types::BITWISE_AND,
+      token_types::MULTIPLY,
       token_types::LOGICAL_NOT
     };
 
@@ -741,12 +748,13 @@ namespace brandy
 
       binOpNode->left = move(leftNode);
       binOpNode->operation = last_token();
-      
+
       binOpNode->right = (this->*rightRecurse)();
 
       if (!binOpNode) REJECT_RULE_ERROR("No right hand side for binary operator expression");
 
       leftNode = move(binOpNode);
+      binOpNode = create_node<binary_operator_node>();
       goto again;
     }
 
@@ -953,20 +961,20 @@ namespace brandy
 
 #define CONDITIONAL_STATEMENT(name) \
   do \
-      { \
+            { \
     NEWLINE_GAURD();\
     auto ifNode = create_node<if_node>();\
     if (accept(token_types::IF)) \
-            {\
+                        {\
       ifNode->condition = accept_expression();\
       if(!ifNode->condition) REJECT_RULE_ERROR("No condotion on a conditional " #name);\
       ifNode->scope = create_node<scope_node>();\
       name##Node->end = m_current;\
       ifNode->scope->statements.push_back(move(name##Node));\
       ACCEPT_RULE(ifNode);\
-            }\
-                else if (accept(token_types::UNLESS))\
-        {\
+                        }\
+                                                                                                                                else if (accept(token_types::UNLESS))\
+              {\
       auto notNode = create_node<unary_operator_node>();\
       notNode->operation = token("!", 1, token_types::LOGICAL_NOT);\
       notNode->expression = accept_expression();\
@@ -977,8 +985,8 @@ namespace brandy
       name##Node->end = m_current;\
       ifNode->scope->statements.push_back(move(name##Node));\
       ACCEPT_RULE(ifNode);\
-        }\
-      } while (false)\
+              }\
+            } while (false)\
 
   unique_ptr<statement_node> parser::accept_goto()
   {
@@ -1282,31 +1290,154 @@ namespace brandy
   }
 
   // ---------------------------------------------------------------------------
+  
+  unique_ptr<typedef_node> parser::accept_typedef()
+  {
+    ENTER_RULE(typedef);
+
+    auto typedefNode = create_node<typedef_node>();
+
+    if (accept(token_types::TYPEDEF))
+    {
+      expect(token_types::IDENTIFIER);
+      
+      typedefNode->name = last_token();
+
+      accept(token_types::AS);
+
+      typedefNode->type = accept_type();
+      if (!typedefNode->type) REJECT_RULE_ERROR("typename not present in typedef");
+
+      ACCEPT_RULE(typedefNode);
+    }
+
+    REJECT_RULE();
+  }
+
+  // ---------------------------------------------------------------------------
 
   unique_ptr<type_node> parser::accept_type()
   {
     ENTER_RULE(type);
 
-    auto typeNode = create_node<type_node>();
+    auto tupleNode = create_node<tuple_node>();
+    auto delegateNode = create_node<delegate_node>();
+    auto decltypeNode = create_node<decltype_node>();
 
-    while (auto qualifier = accept_qualifier())
-      typeNode->qualifiers.push_back(move(qualifier));
-
-    if (accept(token_types::IDENTIFIER))
+    if (accept(token_types::OPEN_CURLY))
     {
-      typeNode->name.push_back(last_token());
-
-      while (accept(token_types::DOT))
+      do
       {
-        expect(token_types::IDENTIFIER);
-        typeNode->name.push_back(last_token());
+        auto type = accept_type();
+        if (!type) REJECT_RULE_ERROR("Tuple must contain at least one element");
+        tupleNode->inner_types.push_back(move(type));
+      } while (accept(token_types::COMMA));
+
+      expect(token_types::CLOSE_CURLY);
+
+      ACCEPT_RULE(tupleNode);
+    }
+    else if (accept(token_types::FUNCTION))
+    {
+      expect(token_types::OPEN_PAREN);
+
+      if (auto firstType = accept_type())
+      {
+        delegateNode->parameter_types.push_back(move(firstType));
+
+        while (accept(token_types::COMMA))
+        {
+          auto type = accept_type();
+          if (!type) REJECT_RULE_ERROR("Comma in delegate parameter list not followed by type");
+          delegateNode->parameter_types.push_back(move(type));
+        }
       }
 
-      ACCEPT_RULE(typeNode);
+      expect(token_types::CLOSE_PAREN);
+
+      delegateNode->return_type = accept_type();
+      if (!delegateNode->return_type) REJECT_RULE_ERROR("Need to have return type on delegate type");
+
+      ACCEPT_RULE(delegateNode);
+    }
+    else if (accept(token_types::DECLTYPE))
+    {
+      decltypeNode->decltype_expression = accept_expression();
+      if (!decltypeNode->decltype_expression) REJECT_RULE_ERROR("No expression following decltype");
+
+      ACCEPT_RULE(decltypeNode);
     }
     else
-      REJECT_RULE();
+    {
+      auto plainType = create_node<plain_type_node>();
+
+      while (auto qualifier = accept_qualifier())
+      {
+        plainType->qualifiers.push_back(move(qualifier));
+      }
+
+      do
+      {
+        if (!accept(token_types::IDENTIFIER))
+        {
+          if (plainType->qualifiers.size() == 0 &&
+            plainType->name.size() == 0)
+            REJECT_RULE();
+          else
+            REJECT_RULE_ERROR("Expected an identifier in typename");
+        }
+
+        plainType->name.push_back(last_token());
+      } while (accept(token_types::DOT));
+
+      while (auto postType = accept_post_type_node())
+      {
+        plainType->post_type.push_back(move(postType));
+      }
+
+      ACCEPT_RULE(plainType);
+    }
   }
+
+  unique_ptr<post_type_node> parser::accept_post_type_node()
+  {
+    ENTER_RULE(post_type);
+
+    auto indirectNode = create_node<type_indirect_node>();
+    auto arrayNode = create_node<type_array_node>();
+    auto templateNode = create_node<type_template_node>();
+
+    if (accept(token_types::MULTIPLY) || accept(token_types::BITWISE_AND))
+    {
+      indirectNode->indirection_type = last_token();
+      ACCEPT_RULE(indirectNode);
+    }
+    else if (accept(token_types::OPEN_BRACKET))
+    {
+      arrayNode->array_size = accept_expression();
+      ACCEPT_RULE(arrayNode);
+    }
+    else if (accept(token_types::OPEN_PAREN))
+    {
+      if (auto firstParam = accept_expression())
+      {
+        templateNode->template_parameters.push_back(move(firstParam));
+
+        do
+        {
+          auto param = accept_expression();
+          if (!param) REJECT_RULE_ERROR("Comma in template parameter list not followed by expression");
+          templateNode->template_parameters.push_back(move(param));
+        } while (accept(token_types::COMMA));
+      }
+
+      ACCEPT_RULE(templateNode);
+    }
+
+    REJECT_RULE();
+  }
+
+  // ---------------------------------------------------------------------------
 
   unique_ptr<qualifier_node> parser::accept_qualifier()
   {
@@ -1441,7 +1572,10 @@ namespace brandy
           return true;
       }
 
-      return m_current->type() != token_types::SUBTRACT;
+      return 
+        m_current->type() != token_types::SUBTRACT &&
+        m_current->type() != token_types::BITWISE_AND &&
+        m_current->type() != token_types::MULTIPLY;
     }
   }
 

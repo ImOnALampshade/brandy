@@ -482,6 +482,8 @@ namespace brandy
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::VALUE), "value");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::REFERENCE), "ref");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::REFERENCE), "reference");
+    add_keyword(root, identifier, gBrandyLexer.create_state(token_types::TYPEDEF), "typedef");
+    add_keyword(root, identifier, gBrandyLexer.create_state(token_types::DECLTYPE), "decltype");
     
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::BITWISE_NOT), '~');
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::COLON), ':');

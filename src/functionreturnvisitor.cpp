@@ -55,6 +55,24 @@ namespace brandy
     return ast_visitor::resume;
   }
 
+  ast_visitor::visitor_result function_return_visitor::visit(property_node *node)
+  {
+    if (node->getter && node->getter->statements.size() == 1)
+    {
+      if (auto expr = dynamic_cast<expression_node *>(node->getter->statements[0].get()))
+      {
+        node->getter->statements[0].release();
+
+        auto returnNode = std::make_unique<return_node>();
+        returnNode->value = std::unique_ptr<expression_node>(expr);
+
+        node->getter->statements[0] = move(returnNode);
+      }
+    }
+
+    return ast_visitor::resume;
+  }
+
   // ---------------------------------------------------------------------------
 }
 

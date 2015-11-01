@@ -44,7 +44,16 @@ namespace brandy
   VISIT_BASE(while_node, statement_node)
   VISIT_BASE(for_node, statement_node)
   VISIT_BASE(import_node, statement_node)
+  VISIT_BASE(typedef_node, symbol_node)
   VISIT_BASE(type_node, abstract_node)
+  VISIT_BASE(tuple_node, type_node)
+  VISIT_BASE(delegate_node, type_node)
+  VISIT_BASE(plain_type_node, type_node)
+  VISIT_BASE(decltype_node, type_node)
+  VISIT_BASE(post_type_node, abstract_node)
+  VISIT_BASE(type_indirect_node, post_type_node)
+  VISIT_BASE(type_array_node, post_type_node)
+  VISIT_BASE(type_template_node, post_type_node)
   VISIT_BASE(qualifier_node, abstract_node)
   VISIT_BASE(attribute_node, abstract_node)
   VISIT_BASE(scope_node, abstract_node)
@@ -227,8 +236,8 @@ namespace brandy
   {
     WALK_BASE(statement_node);
     WALK(condition);
-    WALK(else_clause);
     WALK(scope);
+    WALK(else_clause);
   }
 
   WALK_DECL(while_node)
@@ -254,10 +263,64 @@ namespace brandy
     WALK_BASE(statement_node);
   }
 
+  WALK_DECL(typedef_node)
+  {
+    WALK_BASE(statement_node);
+    WALK(attributes);
+    WALK(type);
+  }
+
   WALK_DECL(type_node)
   {
     WALK_BASE(abstract_node);
+  }
+
+  WALK_DECL(tuple_node)
+  {
+    WALK_BASE(type_node);
+    WALK_ALL(inner_types);
+  }
+
+  WALK_DECL(delegate_node)
+  {
+    WALK_BASE(type_node);
+    WALK_ALL(parameter_types);
+    WALK(return_type);
+  }
+
+  WALK_DECL(plain_type_node)
+  {
+    WALK_BASE(type_node);
     WALK_ALL(qualifiers);
+    WALK_ALL(post_type);
+  }
+
+  WALK_DECL(decltype_node)
+  {
+    WALK_BASE(type_node);
+    WALK(decltype_expression);
+  }
+
+  WALK_DECL(post_type_node)
+  {
+    WALK_BASE(abstract_node);
+  }
+
+  WALK_DECL(type_indirect_node)
+  {
+    WALK_BASE(post_type_node);
+  }
+
+  WALK_DECL(type_array_node)
+  {
+    WALK_BASE(post_type_node);
+    WALK(array_size);
+  }
+
+  WALK_DECL(type_template_node)
+  {
+    WALK_BASE(post_type_node);
+    WALK_ALL(template_parameters);
   }
 
   WALK_DECL(qualifier_node)

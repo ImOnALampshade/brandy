@@ -42,6 +42,13 @@ std::unique_ptr<char[]> load_file(const char *filename)
   return std::move(source);
 }
 
+template<typename visitor_type>
+void walk_with(brandy::module_node *module)
+{
+  visitor_type visitor;
+  brandy::walk_node(module, &visitor);
+}
+
 int main(int argc, const char **argv)
 {
   brandy::compiler_flags opts;
@@ -54,8 +61,15 @@ int main(int argc, const char **argv)
 
   brandy::setup_lexer();
 
-  auto file = load_file(brandy::compiler_flags::current().input_file());
+  auto file = load_file(CURRENT_FLAGS.input_file());
 
+  if (!file)
+  {
+    std::cout << "Failed to open " << CURRENT_FLAGS.input_file() << std::endl;
+    return -1;
+  }
+
+  // Tokenize the file
   std::vector<brandy::token> tokens;
   brandy::tokenize_string(file.get(), tokens);
 
@@ -65,33 +79,15 @@ int main(int argc, const char **argv)
   {
     auto module = parser.parse_module();
 
-    brandy::function_return_visitor returnVisitor;
-    walk_node(module, &returnVisitor);
+    walk_with<brandy::function_return_visitor>(module.get());
 
-    if (brandy::compiler_flags::current().dump_ast())
-    {
-      brandy::tree_dump_visitor visitor;
-      walk_node(module, &visitor);
-    }
+    if (CURRENT_FLAGS.dump_ast())
+      walk_with<brandy::tree_dump_visitor>(module.get());
 
-    FILE *f = fopen("ast.gv", "wt");
+    if (CURRENT_FLAGS.dump_ast_graph())
+      walk_with<brandy::dotfile_visitor>(module.get());
 
-    if (f)
-    {
-      fputs("digraph G {\n", f);
-      fputs("  graph [dpi=300];\n", f);
-
-      brandy::dotfile_visitor visitor(f);
-
-      walk_node(module, &visitor);
-
-      fputs("}\n", f);
-
-      fclose(f);
-    }
-
-    brandy::symbol_table_filler_visitor visitor;
-    walk_node(module, &visitor);
+    walk_with<brandy::symbol_table_filler_visitor>(module.get());
 
     for (auto &pair : module->symbols)
     {

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "tokens.h"
+#include "type.h"
 #include <unordered_map>
 #include <vector>
 
@@ -25,26 +26,28 @@ namespace brandy
   class symbol
   {
   public:
-    enum type {
+    enum kind {
       function,
       variable,
       class_name,
       label,
       property,
-      import
+      import,
+      typedef_name // AKA, typedef
     };
 
-    symbol(const token &name, type symbolType, abstract_node *node);
+    symbol(const token &name, kind symbolType, abstract_node *node);
 
     abstract_node &node();
     
     const abstract_node &node() const;
     token                name() const;
-    type          symbol_type() const;
+    kind          symbol_type() const;
+    type                *type() const;
 
   private:
     token m_name;
-    type m_symbolType;
+    kind m_symbolType;
     abstract_node *m_node;
   };
 
