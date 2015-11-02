@@ -16,7 +16,8 @@ namespace brandy
     fputs(
       "strict digraph {\n"
       "\tgraph [dpi=300];\n"
-      "\tnode [shape=plaintext fontname=\"Source Code Pro\" fontsize=12]; \n", m_file);
+      "\tnode [shape=plaintext fontname=\"Source Code Pro\" fontsize=12];\n"
+      "\tedge [arrowhead=diamond];\n", m_file);
   }
 
   dotfile_visitor::~dotfile_visitor()
@@ -92,7 +93,7 @@ namespace brandy
   DOTFILE_VISTOR(type_indirect_node, "indirect", node->indirection_type);
   DOTFILE_VISTOR(type_array_node, "array");
   DOTFILE_VISTOR(type_template_node, "template");
-  DOTFILE_VISTOR(qualifier_node, "qualifier");
+  DOTFILE_VISTOR(qualifier_node, "qualifier", qualifier_types::names[node->qualifier]);
   DOTFILE_VISTOR(attribute_node, "attributes");
   DOTFILE_VISTOR(scope_node, "scope");
 
@@ -102,6 +103,12 @@ namespace brandy
   {
     if (!m_connectTo)
       fprintf(m_file, "\tptr%p [label=\"[%s]\"];\n", node, name);
+  }
+
+  void dotfile_visitor::format_node(abstract_node *node, const char *name, const char *str)
+  {
+    if (!m_connectTo)
+      fprintf(m_file, "\tptr%p [label=\"[%s]\\n[%s]\"];\n", node, name, str);
   }
 
   void dotfile_visitor::format_node(abstract_node *node, const char *name, const token &tok)

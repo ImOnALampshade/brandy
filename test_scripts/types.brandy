@@ -1,3 +1,5 @@
+const var SIZE = 10 
+
 var my_int : int                          // int
 var my_int_ptr : int *                    // int *
 var my_int_ref : int &                    // std::shared_ptr<int>

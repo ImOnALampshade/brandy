@@ -1,12 +1,10 @@
 // -----------------------------------------------------------------------------
-// Brandy language tokens
+// AST visitor for resolving name references to symbol definitions
 // Howard Hughes
 // -----------------------------------------------------------------------------
 
-#ifndef QUALIFIERS_H
-#define QUALIFIERS_H
-
-#pragma once
+#include "namereferenceresolvervisitor.h"
+#include <iostream>
 
 // -----------------------------------------------------------------------------
 
@@ -14,20 +12,17 @@ namespace brandy
 {
   // ---------------------------------------------------------------------------
 
-  namespace qualifier_types
+  ast_visitor::visitor_result name_reference_resolver_visitor::visit(name_reference_node *node)
   {
-#define QUALIFIER_VALUE(val) val,
-    enum type
+    node->resolved_symbol = get_symbol(node->name);
+    if (!node->resolved_symbol)
     {
-#include "qualifiers.inl"
-      COUNT
-    };
-#undef QUALIFIER_VALUE
-
-    const char *names[];
+      // TOOD: Name error
+    }
+    return ast_visitor::resume;
   }
 
   // ---------------------------------------------------------------------------
 }
 
-#endif
+// -----------------------------------------------------------------------------

@@ -27,15 +27,17 @@ namespace brandy
   {
   public:
     enum kind {
+      invalid,
       function,
       variable,
-      class_name, // AKA, class
+      type_name, // AKA, class
       label,
       property,
       import,
       typedef_name // AKA, typedef
     };
 
+    symbol();
     symbol(const token &name, kind symbolType, abstract_node *node);
 
     abstract_node &node();
@@ -58,6 +60,8 @@ namespace brandy
 
   typedef std::unordered_map<token, symbol> symbol_table;
   typedef std::vector<symbol_table *> symbol_stack;
+
+  extern symbol_table g_baseSymbolTable;
 
   // ---------------------------------------------------------------------------
 }

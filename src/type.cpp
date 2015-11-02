@@ -4,6 +4,7 @@
 // -----------------------------------------------------------------------------
 
 #include "type.h"
+#include "symbol.h"
 
 // -----------------------------------------------------------------------------
 
@@ -172,8 +173,31 @@ namespace brandy
     type string;
     type object;
 
+    static void add_builtin_type(const char *name, type *t)
+    {
+      token nameTok(name, token_types::IDENTIFIER);
+      symbol typeSymbol(nameTok, symbol::type_name, nullptr);
+      
+      g_baseSymbolTable[nameTok] = typeSymbol;
+    }
+
     void setup_types()
     {
+      add_builtin_type("bool", &boolean);
+      add_builtin_type("i8", &i8);
+      add_builtin_type("byte", &i8);
+      add_builtin_type("i16", &i16);
+      add_builtin_type("short", &i16);
+      add_builtin_type("i32", &i32);
+      add_builtin_type("int", &i32);
+      add_builtin_type("i64", &i64);
+      add_builtin_type("long", &i64);
+      add_builtin_type("f32", &f32);
+      add_builtin_type("float", &f32);
+      add_builtin_type("f64", &f64);
+      add_builtin_type("double", &f64);
+      add_builtin_type("string", &string);
+      add_builtin_type("object", &object);
     }
   }
 

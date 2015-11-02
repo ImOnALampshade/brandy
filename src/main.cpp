@@ -17,6 +17,7 @@
 #include "dotfilevisitor.h"
 #include "treedumpvisitor.h"
 #include "symbolfillervisitor.h"
+#include "namereferenceresolvervisitor.h"
 
 std::unique_ptr<char[]> load_file(const char *filename)
 {
@@ -80,19 +81,14 @@ int main(int argc, const char **argv)
     auto module = parser.parse_module();
 
     walk_with<brandy::function_return_visitor>(module.get());
+    walk_with<brandy::symbol_table_filler_visitor>(module.get());
+    walk_with<brandy::name_reference_resolver_visitor>(module.get());
 
     if (CURRENT_FLAGS.dump_ast())
       walk_with<brandy::tree_dump_visitor>(module.get());
 
     if (CURRENT_FLAGS.dump_ast_graph())
       walk_with<brandy::dotfile_visitor>(module.get());
-
-    walk_with<brandy::symbol_table_filler_visitor>(module.get());
-
-    for (auto &pair : module->symbols)
-    {
-      std::cout << pair.first << std::endl;
-    }
   }
   catch (brandy::parsing_error &err)
   {

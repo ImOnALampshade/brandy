@@ -25,7 +25,7 @@ namespace brandy
   {
     ast_visitor::visit(node);
 
-    insert_node(node, node->name, symbol::class_name);
+    insert_node(node, node->name, symbol::type_name);
 
     m_symStack.push_back(&node->symbols);
     walk_node(node, this, false);
@@ -138,21 +138,24 @@ namespace brandy
   ast_visitor::visitor_result symbol_table_filler_visitor::visit(binary_operator_node *node)
   {
     ast_visitor::visit(node);
+
+    // Only check on assignment operations
     if (node->operation.type() != token_types::ASSIGNMENT)
       return ast_visitor::resume;
 
+    // If the left hand side of the assignment is a name reference
     if (auto nameRef = dynamic_cast<name_reference_node *>(node->left.get()))
     {
       auto &table = *m_symStack.back();
 
       for (auto table : m_symStack)
       {
-        // If this table has the name we're looking for in it, then return
+        // If this table has the name we're looking for in it, then return (Was declared earlier)
         if (table->find(nameRef->name) != table->end())
           return ast_visitor::resume;
       }
 
-      // Didn't find it, add it
+      // Didn't find it, add it (implicit declaration)
       auto pair = std::make_pair(nameRef->name, symbol(nameRef->name, symbol::variable, nameRef));
       m_symStack.back()->insert(pair);
     }

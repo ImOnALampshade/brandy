@@ -37,6 +37,12 @@
     <Filter Include="Types">
       <UniqueIdentifier>{e447f871-4920-469b-8f2b-c6d9d94148e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Syntax Tree\AST Visitors\Symbol Walker">
+      <UniqueIdentifier>{43131917-0faa-45ef-a26f-ec659870d9bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Syntax Tree\AST Visitors\Name Reference Resolver">
+      <UniqueIdentifier>{53da05e9-74f0-4d84-9d35-79c5c6ab2434}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\operatortokens.inl">
@@ -87,6 +93,12 @@
     <ClInclude Include="..\src\type.h">
       <Filter>Types</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\symbolwalkervisitor.h">
+      <Filter>Syntax Tree\AST Visitors\Symbol Walker</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\namereferenceresolvervisitor.h">
+      <Filter>Syntax Tree\AST Visitors\Name Reference Resolver</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\tokens.cpp">
@@ -123,6 +135,12 @@
     </ClCompile>
     <ClCompile Include="..\src\type.cpp">
       <Filter>Types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\symbolwalkervisitor.cpp">
+      <Filter>Syntax Tree\AST Visitors\Symbol Walker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\namereferenceresolvervisitor.cpp">
+      <Filter>Syntax Tree\AST Visitors\Name Reference Resolver</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

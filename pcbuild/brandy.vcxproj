@@ -78,10 +78,12 @@
     <ClInclude Include="..\src\functionreturnvisitor.h" />
     <ClInclude Include="..\src\lexer.h" />
     <ClInclude Include="..\src\flags.h" />
+    <ClInclude Include="..\src\namereferenceresolvervisitor.h" />
     <ClInclude Include="..\src\parser.h" />
     <ClInclude Include="..\src\qualifiers.h" />
     <ClInclude Include="..\src\symbol.h" />
     <ClInclude Include="..\src\symbolfillervisitor.h" />
+    <ClInclude Include="..\src\symbolwalkervisitor.h" />
     <ClInclude Include="..\src\tokens.h" />
     <ClInclude Include="..\src\treedumpvisitor.h" />
     <ClInclude Include="..\src\type.h" />
@@ -99,10 +101,12 @@
     <ClCompile Include="..\src\lexer.cpp" />
     <ClCompile Include="..\src\flags.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\namereferenceresolvervisitor.cpp" />
     <ClCompile Include="..\src\parser.cpp" />
     <ClCompile Include="..\src\qualifiers.cpp" />
     <ClCompile Include="..\src\symbol.cpp" />
     <ClCompile Include="..\src\symbolfillervisitor.cpp" />
+    <ClCompile Include="..\src\symbolwalkervisitor.cpp" />
     <ClCompile Include="..\src\tokens.cpp" />
     <ClCompile Include="..\src\treedumpvisitor.cpp" />
     <ClCompile Include="..\src\type.cpp" />

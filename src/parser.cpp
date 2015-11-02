@@ -167,34 +167,47 @@ namespace brandy
       expect(token_types::CLOSE_BRACKET);
     }
 
+    unique_vector<qualifier_node> qualifiers;
+    while (auto qualifier = accept_qualifier())
+      qualifiers.push_back(move(qualifier));
+
     if (auto functionNode = accept_function())
     {
       functionNode->attributes = move(attributes);
+      functionNode->qualifiers = move(qualifiers);
       ACCEPT_RULE(functionNode);
     }
     else if (auto classNode = accept_class())
     {
       classNode->attributes = move(attributes);
+      classNode->qualifiers = move(qualifiers);
       ACCEPT_RULE(classNode);
     }
     else if (auto varNode = accept_var())
     {
       varNode->attributes = move(attributes);
+      varNode->qualifiers = move(qualifiers);
       ACCEPT_RULE(varNode);
     }
     else if (auto propertyNode = accept_property())
     {
       propertyNode->attributes = move(attributes);
+      propertyNode->qualifiers = move(qualifiers);
       ACCEPT_RULE(propertyNode);
     }
     else if (auto typedefNode = accept_typedef())
     {
       typedefNode->attributes = move(attributes);
+      typedefNode->qualifiers = move(qualifiers);
       ACCEPT_RULE(typedefNode);
     }
     else if (attributes)
     {
       REJECT_RULE_ERROR("Attributes have no matching symbol");
+    }
+    else if (!qualifiers.empty())
+    {
+      REJECT_RULE_ERROR("Qualifiers have no matching symbol");
     }
     else
       REJECT_RULE();
@@ -613,7 +626,7 @@ namespace brandy
         }
 
         expect(token_types::CLOSE_CURLY);
-        
+
         ACCEPT_RULE(tableNode);
       }
       else
@@ -1041,20 +1054,20 @@ namespace brandy
 
 #define CONDITIONAL_STATEMENT(name) \
   do \
-    { \
+      { \
     NEWLINE_GAURD();\
     auto ifNode = create_node<if_node>();\
     if (accept(token_types::IF)) \
-        {\
+            {\
       ifNode->condition = accept_expression();\
       if(!ifNode->condition) REJECT_RULE_ERROR("No condotion on a conditional " #name);\
       ifNode->scope = create_node<scope_node>();\
       name##Node->end = m_current;\
       ifNode->scope->statements.push_back(move(name##Node));\
       ACCEPT_RULE(ifNode);\
-        }\
-        else if (accept(token_types::UNLESS))\
-      {\
+            }\
+                else if (accept(token_types::UNLESS))\
+        {\
       auto notNode = create_node<unary_operator_node>();\
       notNode->operation = token("!", token_types::LOGICAL_NOT);\
       notNode->expression = accept_expression();\
@@ -1065,8 +1078,8 @@ namespace brandy
       name##Node->end = m_current;\
       ifNode->scope->statements.push_back(move(name##Node));\
       ACCEPT_RULE(ifNode);\
-      }\
-    } while (false)\
+        }\
+      } while (false)\
 
   unique_ptr<statement_node> parser::accept_goto()
   {
@@ -1337,7 +1350,7 @@ namespace brandy
     ENTER_RULE(import);
 
     auto importNode = create_node<import_node>();
-    
+
     if (!accept(token_types::IMPORT))
       REJECT_RULE();
 
@@ -1543,8 +1556,29 @@ namespace brandy
 
   unique_ptr<qualifier_node> parser::accept_qualifier()
   {
-    // TODO: Qualifiers
-    return nullptr;
+    ENTER_RULE(qualifier);
+
+    auto qualifierNode = create_node<qualifier_node>();
+
+#define QUALIFIER_NAME(name) { token_types::name, qualifier_types::name }
+    static const std::pair<token_types::type, qualifier_types::type> qualifiers[] =
+    {
+      QUALIFIER_NAME(CONST),
+      QUALIFIER_NAME(STATIC),
+      QUALIFIER_NAME(VIRTUAL)
+    };
+#undef QUALIFIER_NAME
+
+    for (const auto &qualifier : qualifiers)
+    {
+      if (!accept(qualifier.first))
+        continue;
+
+      qualifierNode->qualifier = qualifier.second;
+      ACCEPT_RULE(qualifierNode);
+    }
+
+    REJECT_RULE();
   }
 
   unique_ptr<attribute_node> parser::accept_attribute()

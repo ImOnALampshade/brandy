@@ -67,6 +67,7 @@ namespace brandy
 
   private:
     void format_node(abstract_node *node, const char *name);
+    void format_node(abstract_node *node, const char *name, const char *str);
     void format_node(abstract_node *node, const char *name, const token &tok);
     void format_node(abstract_node *node, const char *name, const std::vector<token> &tok);
     

@@ -2,7 +2,7 @@ meta
 {
   import compiler
 
-  @[CacheResults()]
+  @[cache_result()]
   func vector(item_type as type) type
   {
     return compiler.compile_class(_vector, {
@@ -14,6 +14,8 @@ meta
 class _vector
 {
   typedef item_type as int
+
+  static const var m_growthFactor = 2
 
   var m_items     : item_type[] * = nil
   var m_size      : iarch = 0
@@ -37,7 +39,7 @@ class _vector
   func push_back(item as item_type)
   {
     if m_size == m_cap: 
-      m_cap = max 1, m_cap * 2
+      m_cap = max 1, m_cap * m_growthFactor
 
     m_items[m_size] = item
     m_size += 1
@@ -56,8 +58,8 @@ class _vector
 }
 
 // IE:
-int_vector = vector(int)
-str_vector = vector(string)
+int_vector = vector(typename int)
+str_vector = vector(typename string)
 
 
 

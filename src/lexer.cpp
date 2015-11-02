@@ -523,6 +523,9 @@ namespace brandy
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::TYPEDEF), "typedef");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::DECLTYPE), "decltype");
     add_keyword(root, identifier, gBrandyLexer.create_state(token_types::TYPENAME), "typename");
+    add_keyword(root, identifier, gBrandyLexer.create_state(token_types::CONST), "const");
+    add_keyword(root, identifier, gBrandyLexer.create_state(token_types::STATIC), "static");
+    add_keyword(root, identifier, gBrandyLexer.create_state(token_types::VIRTUAL), "virtual");
 
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::BITWISE_NOT), '~');
     gBrandyLexer.add_edge(root, gBrandyLexer.create_state(token_types::COLON), ':');

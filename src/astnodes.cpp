@@ -99,6 +99,7 @@ namespace brandy
   {
     WALK_BASE(statement_node);
     WALK(attributes);
+    WALK_ALL(qualifiers);
   }
 
   WALK_DECL(expression_node)

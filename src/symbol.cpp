@@ -11,10 +11,19 @@ namespace brandy
 {
   // ---------------------------------------------------------------------------
 
+  symbol::symbol() :
+    m_name(),
+    m_symbolType(invalid),
+    m_node(nullptr),
+    m_type(nullptr)
+  {
+  }
+
   symbol::symbol(const token &name, kind symbolType, abstract_node *node) :
     m_name(name),
     m_symbolType(symbolType),
-    m_node(node)
+    m_node(node),
+    m_type(nullptr)
   {
   }
 
@@ -33,6 +42,10 @@ namespace brandy
 
   void symbol::var_type(type *t) { m_type = t; }
 
+  // ---------------------------------------------------------------------------
+
+  symbol_table g_baseSymbolTable;
+  
   // ---------------------------------------------------------------------------
 }
 

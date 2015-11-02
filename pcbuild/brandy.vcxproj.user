@@ -3,11 +3,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>test_scripts\meta_template.brandy --dump-ast-graph</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>test_scripts\fibonacci.brandy --dump-ast-graph</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>test_scripts\meta_template.brandy --dump-ast-graph</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>test_scripts\fibonacci.brandy --dump-ast-graph</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
