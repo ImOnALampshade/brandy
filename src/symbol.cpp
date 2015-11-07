@@ -12,35 +12,22 @@ namespace brandy
   // ---------------------------------------------------------------------------
 
   symbol::symbol() :
-    m_name(),
-    m_symbolType(invalid),
-    m_node(nullptr),
-    m_type(nullptr)
+    name(),
+    symbol_type(invalid),
+    node(nullptr),
+    type(nullptr),
+    is_implicit(false)
   {
   }
 
   symbol::symbol(const token &name, kind symbolType, abstract_node *node) :
-    m_name(name),
-    m_symbolType(symbolType),
-    m_node(node),
-    m_type(nullptr)
+    name(name),
+    symbol_type(symbolType),
+    node(node),
+    type(nullptr),
+    is_implicit(false)
   {
   }
-
-  // ---------------------------------------------------------------------------
-
-  abstract_node &symbol::node() { return *m_node; }
-
-  // ---------------------------------------------------------------------------
-
-  const abstract_node &symbol::node() const { return *m_node; }
-  token                symbol::name() const { return m_name; }
-  symbol::kind  symbol::symbol_type() const { return m_symbolType; }
-  type            *symbol::var_type() const { return m_type; }
-
-  // ---------------------------------------------------------------------------
-
-  void symbol::var_type(type *t) { m_type = t; }
 
   // ---------------------------------------------------------------------------
 

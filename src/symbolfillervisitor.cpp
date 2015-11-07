@@ -146,8 +146,6 @@ namespace brandy
     // If the left hand side of the assignment is a name reference
     if (auto nameRef = dynamic_cast<name_reference_node *>(node->left.get()))
     {
-      auto &table = *m_symStack.back();
-
       for (auto table : m_symStack)
       {
         // If this table has the name we're looking for in it, then return (Was declared earlier)
@@ -157,6 +155,7 @@ namespace brandy
 
       // Didn't find it, add it (implicit declaration)
       auto pair = std::make_pair(nameRef->name, symbol(nameRef->name, symbol::variable, nameRef));
+      pair.second.is_implicit = true;
       m_symStack.back()->insert(pair);
     }
 

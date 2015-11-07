@@ -233,6 +233,7 @@ namespace brandy
     token docs;
     unique_ptr<attribute_node> attributes;
     unique_vector<qualifier_node> qualifiers;
+    type_reference type;
 
     ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
     void internal_walk(ast_visitor *visitor) override;
@@ -240,6 +241,8 @@ namespace brandy
 
   struct expression_node : public statement_node
   {
+    type_reference resulting_type;
+
     ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
     void internal_walk(ast_visitor *visitor) override;
   };

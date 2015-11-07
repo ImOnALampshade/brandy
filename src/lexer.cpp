@@ -271,6 +271,12 @@ namespace brandy
       auto lit_i16 = gBrandyLexer.create_state(token_types::I16_LITERAL);
       auto lit_i32 = gBrandyLexer.create_state(token_types::I32_LITERAL);
       auto lit_i64 = gBrandyLexer.create_state(token_types::I64_LITERAL);
+      
+      auto lit_ui8 = gBrandyLexer.create_state(token_types::UI8_LITERAL);
+      auto lit_ui16 = gBrandyLexer.create_state(token_types::UI16_LITERAL);
+      auto lit_ui32 = gBrandyLexer.create_state(token_types::UI32_LITERAL);
+      auto lit_ui64 = gBrandyLexer.create_state(token_types::UI64_LITERAL);
+      
       auto dot = gBrandyLexer.create_state();
       auto lit_f32 = gBrandyLexer.create_state(token_types::F32_LITERAL);
       auto lit_f64 = gBrandyLexer.create_state(token_types::F64_LITERAL);
@@ -289,6 +295,16 @@ namespace brandy
       gBrandyLexer.add_edge(lit_i32, lit_i64, 'L');
       gBrandyLexer.add_edge(lit_i32, lit_f32, 'f');
       gBrandyLexer.add_edge(lit_i32, lit_f32, 'F');
+
+      gBrandyLexer.add_edge(lit_i32, lit_ui32, 'u');
+      gBrandyLexer.add_edge(lit_i32, lit_ui32, 'U');
+
+      gBrandyLexer.add_edge(lit_ui32, lit_ui8, 'b');
+      gBrandyLexer.add_edge(lit_ui32, lit_ui8, 'B');
+      gBrandyLexer.add_edge(lit_ui32, lit_ui16, 's');
+      gBrandyLexer.add_edge(lit_ui32, lit_ui16, 'S');
+      gBrandyLexer.add_edge(lit_ui32, lit_ui64, 'l');
+      gBrandyLexer.add_edge(lit_ui32, lit_ui64, 'L');
 
       gBrandyLexer.add_edge(lit_i32, dot, '.');
 

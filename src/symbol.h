@@ -23,7 +23,7 @@ namespace brandy
   
   // ---------------------------------------------------------------------------
 
-  class symbol
+  struct symbol
   {
   public:
     enum kind {
@@ -40,20 +40,11 @@ namespace brandy
     symbol();
     symbol(const token &name, kind symbolType, abstract_node *node);
 
-    abstract_node &node();
-    
-    const abstract_node &node() const;
-    token                name() const;
-    kind          symbol_type() const;
-    type            *var_type() const;
-
-    void var_type(type *t);
-
-  private:
-    token m_name;
-    kind m_symbolType;
-    abstract_node *m_node;
-    type *m_type;
+    token name;
+    kind symbol_type;
+    abstract_node *node;
+    type_reference type;
+    bool is_implicit;
   };
 
   // ---------------------------------------------------------------------------

@@ -87,6 +87,7 @@
     <ClInclude Include="..\src\tokens.h" />
     <ClInclude Include="..\src\treedumpvisitor.h" />
     <ClInclude Include="..\src\type.h" />
+    <ClInclude Include="typeresolver.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\keywordtokens.inl" />
@@ -110,6 +111,7 @@
     <ClCompile Include="..\src\tokens.cpp" />
     <ClCompile Include="..\src\treedumpvisitor.cpp" />
     <ClCompile Include="..\src\type.cpp" />
+    <ClCompile Include="typeresolver.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
