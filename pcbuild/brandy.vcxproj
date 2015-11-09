@@ -74,6 +74,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\astnodes.h" />
+    <ClInclude Include="..\src\binopnodereplacervisitor.h" />
     <ClInclude Include="..\src\dotfilevisitor.h" />
     <ClInclude Include="..\src\functionreturnvisitor.h" />
     <ClInclude Include="..\src\lexer.h" />
@@ -97,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\astnodes.cpp" />
+    <ClCompile Include="..\src\binopnodereplacervisitor.cpp" />
     <ClCompile Include="..\src\dotfilevisitor.cpp" />
     <ClCompile Include="..\src\functionreturnvisitor.cpp" />
     <ClCompile Include="..\src\lexer.cpp" />

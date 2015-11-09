@@ -46,6 +46,9 @@
     <Filter Include="Syntax Tree\AST Visitors\Type Resolver">
       <UniqueIdentifier>{4f34edf4-f4b9-4bec-9ddd-ede3aadee297}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Syntax Tree\AST Visitors\Binary Operator Replacer">
+      <UniqueIdentifier>{5d1e9378-eea0-4d2c-b68a-b2be61828832}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\operatortokens.inl">
@@ -105,6 +108,9 @@
     <ClInclude Include="..\src\typeresolver.h">
       <Filter>Syntax Tree\AST Visitors\Type Resolver</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\binopnodereplacervisitor.h">
+      <Filter>Syntax Tree\AST Visitors\Binary Operator Replacer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\tokens.cpp">
@@ -150,6 +156,9 @@
     </ClCompile>
     <ClCompile Include="..\src\typeresolver.cpp">
       <Filter>Syntax Tree\AST Visitors\Type Resolver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\binopnodereplacervisitor.cpp">
+      <Filter>Syntax Tree\AST Visitors\Binary Operator Replacer</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
