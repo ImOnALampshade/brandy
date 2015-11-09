@@ -102,7 +102,7 @@
     <ClInclude Include="..\src\namereferenceresolvervisitor.h">
       <Filter>Syntax Tree\AST Visitors\Name Reference Resolver</Filter>
     </ClInclude>
-    <ClInclude Include="typeresolver.h">
+    <ClInclude Include="..\src\typeresolver.h">
       <Filter>Syntax Tree\AST Visitors\Type Resolver</Filter>
     </ClInclude>
   </ItemGroup>
@@ -148,7 +148,7 @@
     <ClCompile Include="..\src\namereferenceresolvervisitor.cpp">
       <Filter>Syntax Tree\AST Visitors\Name Reference Resolver</Filter>
     </ClCompile>
-    <ClCompile Include="typeresolver.cpp">
+    <ClCompile Include="..\src\typeresolver.cpp">
       <Filter>Syntax Tree\AST Visitors\Type Resolver</Filter>
     </ClCompile>
   </ItemGroup>

@@ -24,15 +24,15 @@ namespace brandy
   {
     enum flags : std::uint32_t
     {
-      is_class       = 1 << 0,
-      is_struct      = 1 << 1,
-      is_interface   = 1 << 2,
-      is_abstract    = 1 << 3,
+      is_class = 1 << 0,
+      is_struct = 1 << 1,
+      is_interface = 1 << 2,
+      is_abstract = 1 << 3,
       is_inheritable = 1 << 4,
-      is_primitive   = 1 << 5,
-      is_int         = 1 << 6,
-      is_unsigned    = 1 << 7,
-      is_float       = 1 << 8
+      is_primitive = 1 << 5,
+      is_int = 1 << 6,
+      is_unsigned = 1 << 7,
+      is_float = 1 << 8
     };
 
     type();
@@ -55,15 +55,35 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
+  struct type_modifiers
+  {
+    enum { pointer, array, reference, constant, obj_static, obj_virtual };
+
+    int modifier;
+
+    union
+    {
+      struct
+      {
+        // If the modifier makes this an array, how large of an array is it?
+        size_t array_size;
+      };
+    };
+  };
+
   struct type_reference
   {
     type_reference(type *inner = nullptr) :
-      inner_type(inner) {}
+      inner_type(inner)
+    {
+    }
+
+    operator bool() const;
 
     static type_reference common(type_reference t1, type_reference t2);
 
     type *inner_type;
-    bool is_const;
+    std::vector<type_modifiers> qualifiers;
   };
 
   // ---------------------------------------------------------------------------

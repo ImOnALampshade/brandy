@@ -282,6 +282,7 @@ namespace brandy
   {
     unique_ptr<type_node> type;
     unique_ptr<expression_node> expression;
+    type_reference var_type;
 
     ast_visitor::visitor_result internal_visit(ast_visitor *visitor) override;
     void internal_walk(ast_visitor *visitor) override;
