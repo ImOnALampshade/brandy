@@ -130,11 +130,14 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
+  type_reference::operator bool() const
+  {
+    return inner_type != nullptr;
+  }
+
   type_reference type_reference::common(type_reference t1, type_reference t2)
   {
     type_reference result(type::common(t1.inner_type, t2.inner_type));
-    result.is_const = t1.is_const || t2.is_const;
-
     return result;
   }
 

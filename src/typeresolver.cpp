@@ -37,7 +37,10 @@ namespace brandy
   class assignment_graph_builder : public ast_visitor
   {
   public:
-    assignment_graph_builder(assignment_graph *graph);
+    assignment_graph_builder(assignment_graph *graph) :
+      m_graph(graph)
+    {
+    }
 
   private:
     assignment_graph *m_graph;
@@ -60,6 +63,7 @@ namespace brandy
 
   ast_visitor::visitor_result type_resolver::visit(binary_operator_node *node)
   {
+    return ast_visitor::resume;
   }
 
   ast_visitor::visitor_result type_resolver::visit(function_node *node)
