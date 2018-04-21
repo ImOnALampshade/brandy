@@ -1,38 +1,4 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Visual Studio
-Debug/
-Release/
-*.opensdf
-*.sdf
-*.suo
-# We want VS to run in the right directory, and the working directory for the debugger is 
-# saved in this file
-#*.user
+# Build files
+build/
+build32/
+build64/

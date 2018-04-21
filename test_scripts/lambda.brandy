@@ -1,5 +1,0 @@
-foo = lambda x, y, cb: (cb x, y) * (cb x, y)
-
-x = foo 2, 3, lambda a, b: return a + b
-
-print x
