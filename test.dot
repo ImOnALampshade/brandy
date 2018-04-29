@@ -1,0 +1,16 @@
+strict digraph {
+	graph [dpi=300];
+	node [shape=plaintext fontname="Source Code Pro" fontsize=12];
+	ptr0x7fbdc240fed0 [label="[module]"];
+	ptr0x7fbdc240fed0 -> { ptr0x7fbdc240ff70 ptr0x7fbdc240fe90 };
+	ptr0x7fbdc240ff70 [label="[binary operation]\n[ASSIGNMENT]\n="];
+	ptr0x7fbdc240ff70 -> { ptr0x7fbdc24100b0 ptr0x7fbdc2410010 };
+	ptr0x7fbdc24100b0 [label="[name reference]\n[IDENTIFIER]\ntest"];
+	ptr0x7fbdc2410010 [label="[binary operation]\n[TRIPLE_DOT]\n..."];
+	ptr0x7fbdc2410010 -> { ptr0x7fbdc2410140 ptr0x7fbdc24101d0 };
+	ptr0x7fbdc2410140 [label="[literal]\n[_INT32]\n0"];
+	ptr0x7fbdc24101d0 [label="[literal]\n[_INT32]\n30"];
+	ptr0x7fbdc240fe90 [label="[index]"];
+	ptr0x7fbdc240fe90 -> { ptr0x7fbdc240fe50 };
+	ptr0x7fbdc240fe50 [label="[name reference]\n[IDENTIFIER]\ntest"];
+}

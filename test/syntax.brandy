@@ -1,0 +1,4 @@
+#!/usr/bin/env brandy
+
+test = 0...30
+test[2 + 1]
