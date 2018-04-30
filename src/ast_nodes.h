@@ -11,6 +11,7 @@
 #include "token.h"
 #include <memory>
 #include <vector>
+#include <assert.h>
 
 // -----------------------------------------------------------------------------
 
@@ -285,7 +286,7 @@ namespace brandy
 
   struct import_node : statement_node
   {
-    std::vector<token> path;
+    token path;
     token alias;
 
     AST_NODE_METHODS

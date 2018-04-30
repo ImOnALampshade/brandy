@@ -106,6 +106,7 @@ namespace brandy
     std::stack<size_t> m_currentStack;
     module *m_module;
     unsigned m_indent;
+    std::stack<bool> m_allowNewlines;
   };
 
   template<typename node_type>

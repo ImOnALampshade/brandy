@@ -1,4 +1,13 @@
-#!/usr/bin/env brandy
+import "../conio" as conio
 
-test = 0...30
-test[2 + 1]
+for i in 1..100
+  if (i % 2) == 0
+    print(i * i)
+
+(conio.all_funcs[
+  test_fn(
+    1200*-13,
+    "something",
+    true
+  )
+]).run(14)

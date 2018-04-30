@@ -5,6 +5,7 @@
 
 #include "parser.h"
 #include "error_base.h"
+#include <assert.h>
 
 // -----------------------------------------------------------------------------
 
@@ -31,6 +32,10 @@
     m_currentStack.pop();    \
     return retval;           \
   } while(false)
+
+#define DISALLOW_SKIP_NEWLINES() do { m_allowNewlines.push(false); } while(false)
+#define ALLOW_SKIP_NEWLINES() do { m_allowNewlines.push(true); } while(false)
+#define POP_SKIP_NEWLINES() do { m_allowNewlines.pop(); } while(false)
 
 namespace brandy
 {
@@ -64,6 +69,7 @@ namespace brandy
     m_module(nullptr),
     m_indent(0)
   {
+    m_allowNewlines.push(true);
   }
 
   parser::parser(module *m) :
@@ -71,6 +77,7 @@ namespace brandy
     m_module(m),
     m_indent(0)
   {
+    m_allowNewlines.push(true);
   }
 
   // ---------------------------------------------------------------------------
@@ -129,7 +136,7 @@ namespace brandy
       // TODO: Nice error message here? Maybe get edit distance from expected
       // word? We know they're missing something like property, or variable, etc
       if (current_token().type() == token_types::IDENTIFIER)
-        ;
+        int noop = 3;
 
       REJECT_RULE_ERROR("attributes missing a symbol");
     }
@@ -477,21 +484,15 @@ namespace brandy
     {
       auto importNode = create_node<import_node>();
 
-      while (accept(token_types::IDENTIFIER) || accept(token_types::DOUBLE_DOT))
+      expect(token_types::_STRING);
+
+      importNode->path = last_token();
+      
+      if (accept(token_types::AS))
       {
-        importNode->path.push_back(last_token());
-
-        if (!accept(token_types::DIVIDE))
-          break;
+        expect(token_types::IDENTIFIER);
+        importNode->alias = last_token();
       }
-
-      if (importNode->path.size() == 0)
-        REJECT_RULE_ERROR("expected path to module in import statement!");
-
-      if (importNode->path.back().type() != token_types::IDENTIFIER)
-        REJECT_RULE_ERROR("expected file name at end of import path");
-
-      importNode->alias = last_token();
 
       ACCEPT_RULE(importNode);
     }
@@ -624,8 +625,12 @@ namespace brandy
   {
     ENTER_RULE(call);
 
+    DISALLOW_SKIP_NEWLINES();
+
     if (accept(token_types::OPEN_PAREN))
     {
+      POP_SKIP_NEWLINES();
+
       auto callNode = create_node<call_node>();
 
       if (accept(token_types::CLOSE_PAREN))
@@ -645,6 +650,8 @@ namespace brandy
 
       ACCEPT_RULE(callNode);
     }
+    else
+      POP_SKIP_NEWLINES();
 
     REJECT_RULE();
   }
@@ -674,9 +681,9 @@ namespace brandy
     if (accept(token_types::OPEN_SQUARE))
     {
       auto indexNode = create_node<index_node>();
-      indexNode->expression = accept_expression();
+      indexNode->index = accept_expression();
 
-      if (!indexNode->expression)
+      if (!indexNode->index)
         REJECT_RULE_ERROR("Expected an index");
 
       expect(token_types::CLOSE_SQUARE);
@@ -701,6 +708,13 @@ namespace brandy
 
     else if (auto nameReferenceNode = accept_name_reference())
       ACCEPT_RULE(nameReferenceNode);
+
+    else if (accept(token_types::OPEN_PAREN))
+    {
+      auto expression = accept_expression();
+      if (expression && accept(token_types::CLOSE_PAREN))
+        ACCEPT_RULE(expression);
+    }
 
     REJECT_RULE();
   }
@@ -799,9 +813,6 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
-#define disallow_skip_newlines() do { } while(false)
-#define pop_skip_newlines() do { } while(false)
-
   unique_ptr<expression_node> parser::accept_generic_expression(
     unique_ptr<expression_node>(parser::*leftRecurse)(),
     unique_ptr<expression_node>(parser::*rightRecurse)(),
@@ -816,13 +827,13 @@ namespace brandy
   again:
     for (auto op = operators; *op; ++op)
     {
-      disallow_skip_newlines();
+      DISALLOW_SKIP_NEWLINES();
       if (!accept(*op))
       {
-        pop_skip_newlines();
+        POP_SKIP_NEWLINES();
         continue;
       }
-      pop_skip_newlines();
+      POP_SKIP_NEWLINES();
 
       binOpNode->left = move(leftNode);
       binOpNode->operation = last_token();
@@ -920,37 +931,37 @@ namespace brandy
 
     static const token_types::type operators[] =
     {
-      token_types::DOUBLE_DOT,
-      token_types::TRIPLE_DOT,
-      token_types::DOUBLE_QUESTION,
-      token_types::EXPONENT,
-      token_types::MULTIPLICATION,
-      token_types::DIVIDE,
-      token_types::MODULO,
-      token_types::DOUBLE_MODULO,
-      token_types::ADDITION,
-      token_types::SUBTRACTION,
-      token_types::BITSHIFT_LEFT,
-      token_types::BITSHIFT_RIGHT,
-      token_types::LOGICAL_BITSHIFT_LEFT,
-      token_types::LOGICAL_BITSHIFT_RIGHT,
-      token_types::GREATER_THAN_OR_EQUAL,
-      token_types::LESS_THAN_OR_EQUAL,
-      token_types::GREATER_THAN,
-      token_types::LESS_THAN,
-      token_types::EQUALITY,
-      token_types::INEQUALITY,
-      token_types::APPROX_GREATER_THAN_OR_EQUAL,
-      token_types::APPROX_LESS_THAN_OR_EQUAL,
-      token_types::APPROX_GREATER_THAN,
-      token_types::APPROX_LESS_THAN,
-      token_types::APPROX_EQUALITY,
-      token_types::APPROX_INEQUALITY,
-      token_types::BITWISE_AND,
-      token_types::BITWISE_XOR,
-      token_types::BITWISE_OR,
-      token_types::LOGICAL_AND,
       token_types::LOGICAL_OR,
+      token_types::LOGICAL_AND,
+      token_types::BITWISE_OR,
+      token_types::BITWISE_XOR,
+      token_types::BITWISE_AND,
+      token_types::APPROX_INEQUALITY,
+      token_types::APPROX_EQUALITY,
+      token_types::APPROX_LESS_THAN,
+      token_types::APPROX_GREATER_THAN,
+      token_types::APPROX_LESS_THAN_OR_EQUAL,
+      token_types::APPROX_GREATER_THAN_OR_EQUAL,
+      token_types::INEQUALITY,
+      token_types::EQUALITY,
+      token_types::LESS_THAN,
+      token_types::GREATER_THAN,
+      token_types::LESS_THAN_OR_EQUAL,
+      token_types::GREATER_THAN_OR_EQUAL,
+      token_types::LOGICAL_BITSHIFT_RIGHT,
+      token_types::LOGICAL_BITSHIFT_LEFT,
+      token_types::BITSHIFT_RIGHT,
+      token_types::BITSHIFT_LEFT,
+      token_types::SUBTRACTION,
+      token_types::ADDITION,
+      token_types::DOUBLE_MODULO,
+      token_types::MODULO,
+      token_types::DIVIDE,
+      token_types::MULTIPLICATION,
+      token_types::EXPONENT,
+      token_types::DOUBLE_QUESTION,
+      token_types::TRIPLE_DOT,
+      token_types::DOUBLE_DOT,
       token_types::INVALID
     };
 
@@ -1035,16 +1046,16 @@ namespace brandy
   {
     size_t i = m_currentIndex;
     while (
-      token_at(i).type() == token_types::WHITESPACE ||
-      token_at(i).type() == token_types::LINE_COMMENT ||
-      token_at(i).type() == token_types::BLOCK_COMMENT ||
-      token_at(i).type() == token_types::SHEBANG ||
-      token_at(i).type() == token_types::NEWLINE
+      i < num_tokens() && (
+        (m_allowNewlines.top() && token_at(i).type() == token_types::NEWLINE) ||
+        token_at(i).type() == token_types::WHITESPACE ||
+        token_at(i).type() == token_types::LINE_COMMENT ||
+        token_at(i).type() == token_types::BLOCK_COMMENT ||
+        token_at(i).type() == token_types::SHEBANG
+      )
     )
     {
       ++i;
-      if (i == num_tokens())
-        return num_tokens();
     }
     return i;
   }
@@ -1126,6 +1137,7 @@ namespace brandy
     size_t i = next_non_whitespace();
 
     if (i == 0) return m_currentIndex == 0;
+    else if (i == num_tokens()) return false;
 
     const auto &t1 = token_at(i);
     const auto &t2 = token_at(i - 1);

@@ -174,6 +174,7 @@ namespace brandy
   {
     WALK_BASE(statement_node);
     WALK(expression);
+    WALK(inner_scope);
   }
 
   NODE_METHODS(import_node)

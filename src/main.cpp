@@ -45,5 +45,6 @@ int main(int argc, const char **argv)
   catch(error_base &e)
   {
     mainModule.print_error(e);
+    std::cin.get();
   }
 }
