@@ -57,7 +57,6 @@ TOKEN_VALUE(IN, "in"),
 TOKEN_VALUE(DO, "do"),
 TOKEN_VALUE(BREAK, "break"),
 TOKEN_VALUE(CONTINUE, "continue"),
-TOKEN_VALUE(AS, "as"),
 
 // Function related keywords
 TOKEN_VALUE(FUNCTION, "func"),
@@ -86,14 +85,13 @@ TOKEN_VALUE(GET, "get"),
 TOKEN_VALUE(SET, "set"),
 TOKEN_VALUE(ENUM, "enum"),
 
+// Other keywords
+TOKEN_VALUE(AS, "as"),
 TOKEN_VALUE(OVER, "over"),
 TOKEN_VALUE(WHERE, "where"),
-
 TOKEN_VALUE(SIZEOF, "sizeof"),
 TOKEN_VALUE(ALIGNOF, "alignof"),
-
 TOKEN_VALUE(GOTO, "goto"),
-
 TOKEN_VALUE(IS, "is"),
 TOKEN_VALUE(ISNT, "isnt"),
 

@@ -314,6 +314,7 @@ namespace brandy
     unique_vec<parameter_node> parameters;
     unique_ptr<type_node> return_type;
     unique_ptr<scope_node> inner_scope;
+    bool is_method;
 
     AST_NODE_METHODS
   };

@@ -87,6 +87,8 @@ namespace brandy
     template<typename node_type>
     unique_ptr<node_type> create_node();
 
+    size_t last_token_index();
+
     const token &last_token();
     const token &current_token();
     const token &token_at(size_t i);

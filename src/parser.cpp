@@ -6,6 +6,7 @@
 #include "parser.h"
 #include "error_base.h"
 #include <assert.h>
+#include <iostream>
 
 // -----------------------------------------------------------------------------
 
@@ -33,15 +34,42 @@
     return retval;           \
   } while(false)
 
-#define DISALLOW_SKIP_NEWLINES() do { m_allowNewlines.push(false); } while(false)
-#define ALLOW_SKIP_NEWLINES() do { m_allowNewlines.push(true); } while(false)
-#define POP_SKIP_NEWLINES() do { m_allowNewlines.pop(); } while(false)
+#define DISALLOW_SKIP_NEWLINES()  \
+  do {                            \
+    m_allowNewlines.push(false);  \
+  } while(false)
+#define ALLOW_SKIP_NEWLINES()    \
+  do {                           \
+    m_allowNewlines.push(true);  \
+  } while(false)
+#define POP_SKIP_NEWLINES()  \
+  do {                       \
+    m_allowNewlines.pop();   \
+  } while(false)
+
+#define INDENT_GAURD() indent_gaurd __definedIndentGaurd(this)
 
 namespace brandy
 {
   namespace
   {
     const size_t expected_indent_size = 2;
+
+    struct indent_gaurd
+    {
+      indent_gaurd(parser *p) :
+        m_parser(p)
+      {
+        m_parser->add_indent();
+      }
+
+      ~indent_gaurd()
+      {
+        m_parser->pop_indent();
+      }
+
+      parser *m_parser;
+    };
   }
 
   struct parser_error : error_base
@@ -226,9 +254,10 @@ namespace brandy
   {
     ENTER_RULE(function);
 
-    if (accept(token_types::FUNCTION))
+    if (accept(token_types::FUNCTION) || accept(token_types::METHOD))
     {
       auto functionNode = create_node<function_node>();
+      functionNode->is_method = (last_token().type() == token_types::METHOD);
 
       expect(token_types::IDENTIFIER);
       functionNode->name = last_token();
@@ -252,12 +281,18 @@ namespace brandy
 
       if (accept(token_types::SINGLE_RIGHT_ARROW))
       {
+        if (accept(token_types::DOCUMENTION_BLOCK))
+          functionNode->doc = last_token();
+
         functionNode->inner_scope = accept_scope();
         ACCEPT_RULE(functionNode);
       }
 
       else if (accept(token_types::SINGLE_RIGHT_FAT_ARROW))
       {
+        if (accept(token_types::DOCUMENTION_BLOCK))
+          functionNode->doc = last_token();
+
         functionNode->inner_scope = create_node<scope_node>();
         auto returnNode = create_node<return_node>();
         returnNode->return_expression = accept_expression();
@@ -276,12 +311,116 @@ namespace brandy
   {
     ENTER_RULE(class);
 
+    if (accept(token_types::CLASS))
+    {
+      INDENT_GAURD();
+
+      auto classNode = create_node<class_node>();
+      expect(token_types::IDENTIFIER);
+      classNode->name = last_token();
+
+      if (accept(token_types::EXTENDS))
+        do
+        {
+          auto type = accept_type();
+          if (!type)
+            REJECT_RULE_ERROR("Expected a base class");
+          classNode->base_classes.push_back(std::move(type));
+        } while(accept(token_types::COMMA));
+
+      if (accept(token_types::DOCUMENTION_BLOCK))
+        classNode->doc = last_token();
+
+      while (auto symbol = accpet_symbol())
+        classNode->members.push_back(std::move(symbol));
+
+      ACCEPT_RULE(classNode);
+    }
+
     REJECT_RULE();
   }
 
   unique_ptr<property_node> parser::accept_property()
   {
     ENTER_RULE(property);
+
+    if (accept(token_types::PROPERTY))
+    {
+      INDENT_GAURD();
+
+      auto propertyNode = create_node<property_node>();
+      expect(token_types::IDENTIFIER);
+      propertyNode->name = last_token();
+
+      if (accept(token_types::COLON))
+      {
+        propertyNode->type = accept_type();
+        if (!propertyNode->type)
+          REJECT_RULE_ERROR(
+            "Expected type name following colon in property definition"
+          );
+      }
+
+      if (accept(token_types::DOCUMENTION_BLOCK))
+        propertyNode->doc = last_token();
+
+      bool gotSet = false;
+
+      if (accept(token_types::SET))
+      {
+        gotSet = true;
+
+        if (accept(token_types::SINGLE_RIGHT_ARROW))
+          propertyNode->setter = accept_scope();
+        else if (accept(token_types::SINGLE_RIGHT_FAT_ARROW))
+          REJECT_RULE_ERROR(
+            "You can't use => for a property setter definition, use -> instead"
+          );
+        else
+          REJECT_RULE_ERROR(
+            "Expected a -> after 'set' in property definition"
+          );
+      }
+
+      if (accept(token_types::GET))
+      {
+        if (accept(token_types::SINGLE_RIGHT_ARROW))
+          propertyNode->getter = accept_scope();
+
+        else if (accept(token_types::SINGLE_RIGHT_FAT_ARROW))
+        {
+          propertyNode->getter = create_node<scope_node>();
+          auto returnNode = create_node<return_node>();
+          returnNode->return_expression = accept_expression();
+          if (!returnNode->return_expression)
+            REJECT_RULE_ERROR(
+              "Expected expression following => in property getter"
+            );
+
+          propertyNode->getter->statements.push_back(std::move(returnNode));
+        }
+        else
+          REJECT_RULE_ERROR(
+            "Expecting a -> or => after 'get' in property definition"
+          );
+      }
+
+      if (!gotSet && accept(token_types::SET))
+      {
+        if (accept(token_types::SINGLE_RIGHT_ARROW))
+          propertyNode->setter = accept_scope();
+        else if (accept(token_types::SINGLE_RIGHT_FAT_ARROW))
+          REJECT_RULE_ERROR(
+            "You can't use => for a property setter definition, use -> instead"
+          );
+        else
+          REJECT_RULE_ERROR(
+            "Expected a -> after 'set' in property definition"
+          );
+      }
+
+      ACCEPT_RULE(propertyNode);
+    }
 
     REJECT_RULE();
   }
@@ -315,20 +454,20 @@ namespace brandy
       accept(token_types::IDENTIFIER);
       parameterNode->name = last_token();
 
-      if(accept(token_types::COLON))
-      {
-        parameterNode->type = accept_type();
+      expect(token_types::COLON);
 
-        if (!parameterNode->type)
-          REJECT_RULE_ERROR("Expected a type following : in parameter");
-      }
+      parameterNode->type = accept_type();
+      if (!parameterNode->type)
+        REJECT_RULE_ERROR("Expected a type following : in parameter");
 
       if (accept(token_types::ASSIGNMENT))
       {
         parameterNode->initial_value = accept_expression();
 
         if (!parameterNode->initial_value)
-          REJECT_RULE_ERROR("Expected a default value following = in parameter");
+          REJECT_RULE_ERROR(
+            "Expected a default value following = in parameter"
+          );
       }
 
       ACCEPT_RULE(parameterNode);
@@ -487,7 +626,7 @@ namespace brandy
       expect(token_types::_STRING);
 
       importNode->path = last_token();
-      
+
       if (accept(token_types::AS))
       {
         expect(token_types::IDENTIFIER);
@@ -542,7 +681,7 @@ namespace brandy
   unique_ptr<scope_node> parser::accept_scope()
   {
     ENTER_RULE(scope);
-    add_indent();
+    INDENT_GAURD();
 
     auto scopeNode = create_node<scope_node>();
 
@@ -555,7 +694,6 @@ namespace brandy
         break;
     }
 
-    pop_indent();
     ACCEPT_RULE(scopeNode);
   }
 
@@ -791,7 +929,9 @@ namespace brandy
         ACCEPT_RULE(lambdaNode);
       }
       else
-        REJECT_RULE_ERROR("Expected an arrow (-> or =>) after function declaration");
+        REJECT_RULE_ERROR(
+          "Expected an arrow (-> or =>) after function declaration"
+        );
     }
 
     REJECT_RULE();
@@ -840,7 +980,8 @@ namespace brandy
 
       binOpNode->right = (this->*rightRecurse)();
 
-      if (!binOpNode) REJECT_RULE_ERROR("No right hand side for binary operator expression");
+      if (!binOpNode)
+        REJECT_RULE_ERROR("No right hand side for binary operator expression");
 
       leftNode = move(binOpNode);
       binOpNode = create_node<binary_operator_node>();
@@ -1066,7 +1207,6 @@ namespace brandy
 
     if (i < num_tokens() && token_at(i).type() == type)
     {
-      // printf("Accepting token %s\n", token_types::names[type]);
       m_currentIndex = i + 1;
       return true;
     }
@@ -1097,19 +1237,33 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
-  const token &parser::last_token()
+  size_t parser::last_token_index()
   {
     size_t i = m_currentIndex;
     do
     {
       if (i == 0)
-        return token::invalid;
+        return num_tokens();
       --i;
     } while (
       i < m_module->m_tokens.size() &&
-      token_at(i).type() == token_types::WHITESPACE);
+      (
+        token_at(i).type() == token_types::WHITESPACE ||
+        token_at(i).type() == token_types::NEWLINE ||
+        token_at(i).type() == token_types::LINE_COMMENT ||
+        token_at(i).type() == token_types::BLOCK_COMMENT ||
+        token_at(i).type() == token_types::SHEBANG
+      )
+    );
 
-    return token_at(i);
+    return i;
+  }
+
+  const token &parser::last_token()
+  {
+    size_t i = last_token_index();
+
+    return i == num_tokens() ? token::invalid : token_at(i);
   }
 
   const token &parser::current_token()
@@ -1132,35 +1286,40 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
+  #define unless(exp) if(!(exp))
+
   bool parser::accept_indent()
   {
-    size_t i = next_non_whitespace();
+    size_t i = last_token_index();
+    size_t j = next_non_whitespace();
 
-    if (i == 0) return m_currentIndex == 0;
-    else if (i == num_tokens()) return false;
+    size_t lnI = token_at(i).line_number();
+    size_t lnJ = token_at(j).line_number();
 
-    const auto &t1 = token_at(i);
-    const auto &t2 = token_at(i - 1);
-
-    if (t2.type() == token_types::WHITESPACE)
+    if (lnI == lnJ)
     {
-      size_t indentSize = t2.length();
-
-      if ((indentSize / expected_indent_size) == m_indent)
-      {
-        m_currentIndex = i;
-        return true;
-      }
-      else
-        return false;
-    }
-    else if (m_indent == 0)
-    {
-      m_currentIndex = i;
+      m_currentIndex = j;
       return true;
     }
-    else
-      return false;
+
+    const token &w = token_at(j - 1);
+
+    if (
+        w.type() != token_types::WHITESPACE ||
+        w.line_number() != lnJ
+      )
+    {
+      m_currentIndex = j;
+      return m_indent == 0;
+    }
+
+    if (w.length() / expected_indent_size == m_indent)
+    {
+      m_currentIndex = j;
+      return true;
+    }
+
+    return false;
   }
 
   // ---------------------------------------------------------------------------

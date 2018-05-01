@@ -465,6 +465,7 @@ namespace brandy
     KEYWORD(LOGICAL_AND, "and");
     KEYWORD(LOGICAL_OR, "or");
     KEYWORD(LOGICAL_NOT, "not");
+    KEYWORD(FUNCTION, "function");
   }
 
   // ---------------------------------------------------------------------------

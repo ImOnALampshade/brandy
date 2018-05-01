@@ -1,13 +1,59 @@
-import "../conio" as conio
+#!/usr/bin/env brandy
 
-for i in 1..100
-  if (i % 2) == 0
-    print(i * i)
+import "other_module"
 
-(conio.all_funcs[
-  test_fn(
-    1200*-13,
-    "something",
-    true
-  )
-]).run(14)
+
+func foo(text : string = "Hello", x : int = 300) void ->
+  """Documentation block!"""
+  // comment
+
+/*
+ block
+ comment
+*/
+
+func baz => 3
+
+
+/-[1-9][0-9]*/.match("abc")
+
+
+func bar(text: string = "Hello") => text
+
+if not exp
+  print("Hello")
+elif 3 == 2 + -1
+  print("World")
+
+true
+null
+
+class my_class extends serializable, pod_type
+  """Test documentation block in a class"""
+
+  function @create ->
+    print("Creating my_class")
+
+  function @destroy ->
+    print("Destroying my_class")
+
+myPropValue = 0
+property my_prop : int
+  get => myPropValue + 1
+  set -> myPropValue = value
+
+class my_class2
+
+func this => 1 != 0 and 1 != 2
+
+(5 + 1)
+
+x = lambda (x : int, y : int) float => x + y
+y = lambda => 3
+
+test ||> 'dest'
+
+for i in 0...5
+  print(i)
+
+
