@@ -164,7 +164,7 @@ namespace brandy
       // TODO: Nice error message here? Maybe get edit distance from expected
       // word? We know they're missing something like property, or variable, etc
       if (current_token().type() == token_types::IDENTIFIER)
-        int noop = 3;
+          "noop";
 
       REJECT_RULE_ERROR("attributes missing a symbol");
     }
@@ -1286,12 +1286,13 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
-  #define unless(exp) if(!(exp))
-
   bool parser::accept_indent()
   {
     size_t i = last_token_index();
     size_t j = next_non_whitespace();
+
+    if (i == num_tokens() || j == num_tokens())
+      return m_indent == 0;
 
     size_t lnI = token_at(i).line_number();
     size_t lnJ = token_at(j).line_number();
@@ -1300,6 +1301,10 @@ namespace brandy
     {
       m_currentIndex = j;
       return true;
+    }
+    else if (j == 0)
+    {
+      return m_indent == 0;
     }
 
     const token &w = token_at(j - 1);
@@ -1351,7 +1356,7 @@ namespace brandy
 
   bool parser::at_end_of_stream()
   {
-    return m_currentIndex == num_tokens();
+    return next_non_whitespace() == num_tokens();
   }
 
   // ---------------------------------------------------------------------------

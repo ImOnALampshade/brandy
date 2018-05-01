@@ -75,22 +75,6 @@ namespace brandy
     return s + 1;
   }
 
-  static const char *start_of_next_line(const char *s)
-  {
-    until (*s == '\n' || *s == '\0')
-      ++s;
-
-    return s + 1;
-  }
-
-  static size_t line_length(const char *s)
-  {
-    size_t len = 0;
-    until (*s == '\n' || *s == '\0')
-      ++len,++s;
-    return len;
-  }
-
   void module::print_error(error_base &e)
   {
     using std::cout;
@@ -107,7 +91,6 @@ namespace brandy
 
     size_t lineNo = t.line_number();
     size_t colNo = (size_t)(t.text() - middleLine);
-    size_t lineLen = line_length(middleLine);
 
     cout << termcolor::bold << m_filePath << ":" <<  lineNo << ":" << colNo << ": ";
     cout << termcolor::red << e.severity() << ": " << termcolor::reset << termcolor::bold;
