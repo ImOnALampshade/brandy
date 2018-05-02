@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ast_nodes_decl.h"
 #include "token.h"
 #include <memory>
 #include <vector>
@@ -22,44 +23,6 @@ namespace brandy
   template<typename T>
   using unique_vec = std::vector<std::unique_ptr<T>>;
   using std::unique_ptr;
-
-  // ---------------------------------------------------------------------------
-
-  struct abstract_node;
-  struct module_node;
-  struct statement_node;
-  struct symbol_node;
-  struct expression_node;
-  struct meta_node;
-  struct meta_block_node;
-  struct attribute_node;
-  struct return_node;
-  struct break_node;
-  struct goto_node;
-  struct if_node;
-  struct while_node;
-  struct for_node;
-  struct import_node;
-  struct label_node;
-  struct class_node;
-  struct function_node;
-  struct var_node;
-  struct parameter_node;
-  struct property_node;
-  struct binary_operator_node;
-  struct unary_operator_node;
-  struct literal_node;
-  struct tuple_literal_node;
-  struct dict_literal_node;
-  struct lambda_node;
-  struct name_reference_node;
-  struct post_expression_node;
-  struct member_access_node;
-  struct call_node;
-  struct cast_node;
-  struct index_node;
-  struct type_node;
-  struct scope_node;
 
   // ---------------------------------------------------------------------------
 
@@ -92,6 +55,7 @@ namespace brandy
     virtual ast_visitor::visitor_result visit(property_node *node);
     virtual ast_visitor::visitor_result visit(binary_operator_node *node);
     virtual ast_visitor::visitor_result visit(unary_operator_node *node);
+    virtual ast_visitor::visitor_result visit(absolute_value_node *node);
     virtual ast_visitor::visitor_result visit(literal_node *node);
     virtual ast_visitor::visitor_result visit(tuple_literal_node *node);
     virtual ast_visitor::visitor_result visit(dict_literal_node *node);
@@ -284,10 +248,9 @@ namespace brandy
     AST_NODE_METHODS
   };
 
-  struct import_node : statement_node
+  struct import_node : symbol_node
   {
     token path;
-    token alias;
 
     AST_NODE_METHODS
   };
@@ -356,6 +319,13 @@ namespace brandy
   {
     unique_ptr<expression_node> expression;
     token operation;
+
+    AST_NODE_METHODS
+  };
+
+  struct absolute_value_node : expression_node
+  {
+    unique_ptr<expression_node> expression;
 
     AST_NODE_METHODS
   };

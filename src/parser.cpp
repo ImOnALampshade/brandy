@@ -48,6 +48,7 @@
   } while(false)
 
 #define INDENT_GAURD() indent_gaurd __definedIndentGaurd(this)
+#define NEWLINE_GAURD(value) newline_gaurd __definedNewlineGaurd(this, value)
 
 namespace brandy
 {
@@ -66,6 +67,22 @@ namespace brandy
       ~indent_gaurd()
       {
         m_parser->pop_indent();
+      }
+
+      parser *m_parser;
+    };
+
+    struct newline_gaurd
+    {
+      newline_gaurd(parser *p, bool value) :
+        m_parser(p)
+      {
+        m_parser->m_allowNewlines.push(value);
+      }
+
+      ~newline_gaurd()
+      {
+        m_parser->m_allowNewlines.pop();
       }
 
       parser *m_parser;
@@ -429,16 +446,11 @@ namespace brandy
   {
     ENTER_RULE(label);
 
-    if (accept(token_types::IDENTIFIER))
+    if (accept(token_types::COLON) && accept(token_types::IDENTIFIER))
     {
-      const auto &target = last_token();
-
-      if (accept(token_types::COLON))
-      {
-        auto labelNode = create_node<label_node>();
-        labelNode->name = target;
-        ACCEPT_RULE(labelNode);
-      }
+      auto labelNode = create_node<label_node>();
+      labelNode->name = last_token();
+      ACCEPT_RULE(labelNode);
     }
 
     REJECT_RULE();
@@ -630,7 +642,7 @@ namespace brandy
       if (accept(token_types::AS))
       {
         expect(token_types::IDENTIFIER);
-        importNode->alias = last_token();
+        importNode->name = last_token();
       }
 
       ACCEPT_RULE(importNode);
@@ -816,8 +828,12 @@ namespace brandy
   {
     ENTER_RULE(index);
 
+    DISALLOW_SKIP_NEWLINES();
+
     if (accept(token_types::OPEN_SQUARE))
     {
+      POP_SKIP_NEWLINES();
+
       auto indexNode = create_node<index_node>();
       indexNode->index = accept_expression();
 
@@ -828,6 +844,8 @@ namespace brandy
 
       ACCEPT_RULE(indexNode);
     }
+    else
+      POP_SKIP_NEWLINES();
 
     REJECT_RULE();
   }
@@ -958,15 +976,17 @@ namespace brandy
     unique_ptr<expression_node>(parser::*rightRecurse)(),
     const token_types::type *operators)
   {
-    auto binOpNode = create_node<binary_operator_node>();
+    ENTER_RULE(accept_generic_expression);
+
 
     auto leftNode = (this->*leftRecurse)();
     if (!leftNode)
-      return nullptr;
+      REJECT_RULE();
 
   again:
     for (auto op = operators; *op; ++op)
     {
+      push_current();
       DISALLOW_SKIP_NEWLINES();
       if (!accept(*op))
       {
@@ -975,20 +995,32 @@ namespace brandy
       }
       POP_SKIP_NEWLINES();
 
+      auto operation = last_token();
+
+      auto rightNode = (this->*rightRecurse)();
+
+      if (!rightNode)
+      {
+        pop_current();
+        ACCEPT_RULE(leftNode);
+      }
+      else
+      {
+        m_currentStack.pop();
+      }
+
+
+      auto binOpNode = create_node<binary_operator_node>();
       binOpNode->left = move(leftNode);
-      binOpNode->operation = last_token();
+      binOpNode->right = move(rightNode);
+      binOpNode->operation = operation;
 
-      binOpNode->right = (this->*rightRecurse)();
-
-      if (!binOpNode)
-        REJECT_RULE_ERROR("No right hand side for binary operator expression");
 
       leftNode = move(binOpNode);
-      binOpNode = create_node<binary_operator_node>();
       goto again;
     }
 
-    return leftNode;
+    ACCEPT_RULE(leftNode);
   }
 
   unique_ptr<expression_node> parser::accept_generic_expression(
@@ -1183,7 +1215,7 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
-  size_t parser::next_non_whitespace()
+  size_t parser::next_valid_token()
   {
     size_t i = m_currentIndex;
     while (
@@ -1203,7 +1235,7 @@ namespace brandy
 
   bool parser::accept(token_types::type type)
   {
-    size_t i = next_non_whitespace();
+    size_t i = next_valid_token();
 
     if (i < num_tokens() && token_at(i).type() == type)
     {
@@ -1228,7 +1260,7 @@ namespace brandy
       size_t lineNo = current_token().line_number();
 
       m_currentIndex = saveCurr;
-      m_currentIndex = next_non_whitespace();
+      m_currentIndex = next_valid_token();
 
       if (current_token().line_number() == lineNo)
         throw parser_error("Expected a semicolon or newline", m_currentIndex);
@@ -1289,7 +1321,7 @@ namespace brandy
   bool parser::accept_indent()
   {
     size_t i = last_token_index();
-    size_t j = next_non_whitespace();
+    size_t j = next_valid_token();
 
     if (i == num_tokens() || j == num_tokens())
       return m_indent == 0;
@@ -1356,7 +1388,7 @@ namespace brandy
 
   bool parser::at_end_of_stream()
   {
-    return next_non_whitespace() == num_tokens();
+    return next_valid_token() == num_tokens();
   }
 
   // ---------------------------------------------------------------------------

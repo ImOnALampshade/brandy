@@ -4,6 +4,7 @@
 #include "error_base.h"
 #include "../lib/argparse/argparse.hpp"
 #include "visitors/dotfile_visitor.h"
+#include "visitors/parent_hookup_visitor.h"
 #include <iostream>
 
 int main(int argc, const char **argv)
@@ -30,20 +31,25 @@ int main(int argc, const char **argv)
   mainModule.load(inputFile.c_str());
   struct parser p(&mainModule);
 
-  // size_t i = 0;
-  // for (auto &token : mainModule.m_tokens)
-  // {
-  //   std::cout << i++ << ": " << token_types::names[token.type()] << ": (" << token << ")" << std::endl;
-  // }
+   //size_t i = 0;
+   //for (auto &token : mainModule.m_tokens)
+   //{
+   //  std::cout << i++ << ": " << token_types::names[token.type()] << ": (" << token << ")" << std::endl;
+   //}
 
   try
   {
     auto moduleNode = p.accept_module();
+
+    parent_hookup_visitor parentVisitor;
+    walk_node(moduleNode, &parentVisitor);
+
     dotfile_visitor visitor(outputDotfile.c_str());
     walk_node(moduleNode, &visitor);
   }
   catch(error_base &e)
   {
     mainModule.print_error(e);
+    std::cin.get();
   }
 }

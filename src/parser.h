@@ -79,7 +79,7 @@ namespace brandy
     unique_ptr<expression_node> accept_assignment_expression();
     unique_ptr<expression_node> accept_pipe_expression();
 
-    size_t next_non_whitespace();
+    size_t next_valid_token();
     bool accept(token_types::type type);
     void expect(token_types::type type);
     void expect_semicolon();

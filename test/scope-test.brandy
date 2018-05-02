@@ -1,8 +1,4 @@
-class my_class extends serializable, pod_type
-  func x ->
-    print('here')
+func x ->
+  print('here')
 
-myPropValue = 0
-property my_prop : int
-  get => myPropValue + 1
-  set -> myPropValue = value
+print('here')

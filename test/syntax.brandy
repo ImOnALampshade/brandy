@@ -2,10 +2,10 @@
 
 import "other_module"
 
+func foo(text : string = "Hello", x : int = 300) void -> return
 
-func foo(text : string = "Hello", x : int = 300) void ->
-  """Documentation block!"""
-  // comment
+//"""Documentation block!"""
+// comment
 
 /*
  block
@@ -14,9 +14,10 @@ func foo(text : string = "Hello", x : int = 300) void ->
 
 func baz => 3
 
+:label
 
-/-[1-9][0-9]*/.match("abc")
-
+if /-[1-9][0-9]*/.match("abc")
+  goto label
 
 func bar(text: string = "Hello") => text
 
@@ -49,7 +50,7 @@ func this => 1 != 0 and 1 != 2
 (5 + 1)
 
 x = lambda (x : int, y : int) float => x + y
-y = lambda => 3
+y = lambda (a : int) => a
 
 test ||> 'dest'
 

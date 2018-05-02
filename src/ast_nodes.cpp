@@ -51,6 +51,7 @@ namespace brandy
   VISIT_BASE(property_node, symbol_node);
   VISIT_BASE(binary_operator_node, expression_node);
   VISIT_BASE(unary_operator_node, expression_node);
+  VISIT_BASE(absolute_value_node, expression_node);
   VISIT_BASE(literal_node, expression_node);
   VISIT_BASE(tuple_literal_node, expression_node);
   VISIT_BASE(dict_literal_node, expression_node);
@@ -230,6 +231,12 @@ namespace brandy
   }
 
   NODE_METHODS(unary_operator_node)
+  {
+    WALK_BASE(expression_node);
+    WALK(expression);
+  }
+
+  NODE_METHODS(absolute_value_node)
   {
     WALK_BASE(expression_node);
     WALK(expression);

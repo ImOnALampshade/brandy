@@ -30,6 +30,7 @@ namespace brandy
     ast_visitor::visitor_result visit(property_node *node) override;
     ast_visitor::visitor_result visit(binary_operator_node *node) override;
     ast_visitor::visitor_result visit(unary_operator_node *node) override;
+    ast_visitor::visitor_result visit(absolute_value_node *node) override;
     ast_visitor::visitor_result visit(member_access_node *node) override;
     ast_visitor::visitor_result visit(call_node *node) override;
     ast_visitor::visitor_result visit(cast_node *node) override;
