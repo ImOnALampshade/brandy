@@ -73,11 +73,23 @@ namespace brandy
       unique_ptr<expression_node>(parser::*recurse)(),
       const token_types::type *operators);
 
-    unique_ptr<expression_node> accept_unary_expression();
-    unique_ptr<expression_node> accept_arrow_expression();
-    unique_ptr<expression_node> accept_binary_expression();
-    unique_ptr<expression_node> accept_assignment_expression();
-    unique_ptr<expression_node> accept_pipe_expression();
+    unique_ptr<expression_node> accept_unary_operator();
+    unique_ptr<expression_node> accept_arrow();
+    unique_ptr<expression_node> accept_expansion();
+    unique_ptr<expression_node> accept_null_coalesce();
+    unique_ptr<expression_node> accept_exponent();
+    unique_ptr<expression_node> accept_multiplication();
+    unique_ptr<expression_node> accept_addition();
+    unique_ptr<expression_node> accept_bitwise_shift();
+    unique_ptr<expression_node> accept_comparison();
+    unique_ptr<expression_node> accept_equality();
+    unique_ptr<expression_node> accept_bitwise_and();
+    unique_ptr<expression_node> accept_bitwise_xor();
+    unique_ptr<expression_node> accept_bitwise_or();
+    unique_ptr<expression_node> accept_logical_and();
+    unique_ptr<expression_node> accept_logical_or();
+    unique_ptr<expression_node> accept_pipe();
+    unique_ptr<expression_node> accept_assignment();
 
     size_t next_valid_token();
     bool accept(token_types::type type);

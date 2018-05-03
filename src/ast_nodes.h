@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ast_nodes_decl.h"
+#include "symbols/symbol.h"
 #include "token.h"
 #include <memory>
 #include <vector>
@@ -166,13 +167,14 @@ namespace brandy
     token name;
     token doc;
     unique_ptr<attribute_node> attributes;
+    brandy::symbol *symbol;
 
     AST_NODE_METHODS
   };
 
   struct expression_node : statement_node
   {
-    // type
+    type_symbol *resulting_type;
 
     AST_NODE_METHODS
   };
@@ -251,6 +253,7 @@ namespace brandy
   struct import_node : symbol_node
   {
     token path;
+    brandy::import_symbol import_symbol;
 
     AST_NODE_METHODS
   };
@@ -268,6 +271,7 @@ namespace brandy
   {
     unique_vec<type_node> base_classes;
     unique_vec<symbol_node> members;
+    brandy::type_symbol type_symbol;
 
     AST_NODE_METHODS
   };
@@ -278,6 +282,7 @@ namespace brandy
     unique_ptr<type_node> return_type;
     unique_ptr<scope_node> inner_scope;
     bool is_method;
+    brandy::function_symbol function_symbol;
 
     AST_NODE_METHODS
   };
@@ -286,6 +291,7 @@ namespace brandy
   {
     unique_ptr<type_node> type;
     unique_ptr<expression_node> initial_value;
+    brandy::variable_symbol variable_symbol;
 
     AST_NODE_METHODS
   };
@@ -300,6 +306,7 @@ namespace brandy
     unique_ptr<type_node> type;
     unique_ptr<scope_node> getter;
     unique_ptr<scope_node> setter;
+    brandy::property_symbol property_symbol;
 
     AST_NODE_METHODS
   };

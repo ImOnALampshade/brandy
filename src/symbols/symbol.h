@@ -10,6 +10,7 @@
 
 #include "../ast_nodes_decl.h"
 #include "../token.h"
+#include "symbol_table.h"
 #include <unordered_map>
 
 // -----------------------------------------------------------------------------
@@ -29,7 +30,6 @@ namespace brandy
 
   struct symbol
   {
-    symbol(symbol_node *astNode);
     virtual ~symbol() { }
 
     const token &name() const;
@@ -58,8 +58,6 @@ namespace brandy
   {
     type_symbol *m_type;
 
-    variable_symbol();
-
     bool is_variable() const override final { return true; }
   };
 
@@ -70,8 +68,6 @@ namespace brandy
     type_symbol *m_type;
     // getter/setter?
 
-    property_symbol();
-
     bool is_property() const override final { return true; }
   };
 
@@ -79,9 +75,30 @@ namespace brandy
 
   struct function_symbol : symbol
   {
-    type_symbol *m_type;
+    type_symbol *m_returnType;
+    std::vector<type_symbol *> m_paramTypes;
     // inner function?
-    // Parameter list?
+    // default arguments?
+
+    bool is_function() const override final { return true; }
+  };
+
+  // ---------------------------------------------------------------------------
+
+  struct type_symbol : symbol
+  {
+    symbol_table *m_members;
+
+    bool is_type() const override final { return true; }
+  };
+
+  // ---------------------------------------------------------------------------
+
+  struct import_symbol : symbol
+  {
+    symbol_node *m_symbols;
+
+    bool is_import() const override final { return true; }
   };
 
   // ---------------------------------------------------------------------------

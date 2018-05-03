@@ -155,9 +155,7 @@ namespace brandy
     ENTER_RULE(symbol);
 
     if (!accept_indent())
-    {
       REJECT_RULE();
-    }
 
     auto attributes = accept_attributes();
 
@@ -186,9 +184,7 @@ namespace brandy
       REJECT_RULE_ERROR("attributes missing a symbol");
     }
     else
-    {
       REJECT_RULE();
-    }
   }
 
   unique_ptr<statement_node> parser::accept_statement()
@@ -196,10 +192,7 @@ namespace brandy
     ENTER_RULE(statement);
 
     if (!accept_indent())
-    {
       REJECT_RULE();
-    }
-
 
     if (auto labelNode = accept_label())
       ACCEPT_RULE(labelNode);
@@ -715,7 +708,7 @@ namespace brandy
   {
     ENTER_RULE(expression);
 
-    if (auto exp = accept_pipe_expression())
+    if (auto exp = accept_assignment())
       ACCEPT_RULE(exp);
 
     REJECT_RULE();
@@ -1032,186 +1025,212 @@ namespace brandy
 
   // ---------------------------------------------------------------------------
 
-  unique_ptr<expression_node> parser::accept_unary_expression()
+  unique_ptr<expression_node> parser::accept_unary_operator()
   {
-    ENTER_RULE(unary_expression);
+    ENTER_RULE(unary_operator);
 
-    static const token_types::type operators[] =
+    static const token_types::type unary_operators[] =
     {
-      token_types::INCREMENT,
-      token_types::DECREMENT,
       token_types::ADDITION,
       token_types::SUBTRACTION,
       token_types::BITWISE_XOR,
+      token_types::DOUBLE_DOT,
       token_types::TRIPLE_DOT,
       token_types::LOGICAL_NOT,
       token_types::BITWISE_NOT,
       token_types::MULTIPLICATION,
-      token_types::BITWISE_AND,
-      token_types::SIZEOF,
-      token_types::ALIGNOF
+      token_types::BITWISE_AND
     };
 
     auto unaryOpNode = create_node<unary_operator_node>();
 
-    for (token_types::type op : operators)
+    for (token_types::type op : unary_operators)
     {
       if (!accept(op)) continue;
 
       unaryOpNode->operation = last_token();
-      unaryOpNode->expression = accept_unary_expression();
+      unaryOpNode->expression = accept_unary_operator();
       ACCEPT_RULE(unaryOpNode);
     }
 
     if (auto postExprNode = accept_post_expression())
       ACCEPT_RULE(postExprNode);
-
-    REJECT_RULE();
+    else
+      REJECT_RULE();
   }
 
-  unique_ptr<expression_node> parser::accept_arrow_expression()
-  {
-    ENTER_RULE(accept_expression);
-
-    static const token_types::type operators[] =
-    {
-      token_types::SINGLE_RIGHT_ARROW,
-      token_types::SINGLE_LEFT_ARROW,
-      token_types::SINGLE_RIGHT_LONG_ARROW,
-      token_types::SINGLE_LEFT_LONG_ARROW,
-      token_types::BIDIRECTIONAL_ARROW,
-      token_types::SINGLE_RIGHT_FAT_ARROW,
-      token_types::SINGLE_RIGHT_LONG_FAT_ARROW,
-      token_types::SINGLE_LEFT_LONG_FAT_ARROW,
-      token_types::BIDIRECTIONAL_FAT_ARROW,
-      token_types::INVALID
-    };
-
-    auto node = accept_generic_expression(
-      &parser::accept_unary_expression,
-      &parser::accept_expression,
-      operators
-    );
-
-    if (node) ACCEPT_RULE(node);
-
-    REJECT_RULE();
+#define BINARY_EXPRESSION(name, next, ...)                            \
+  unique_ptr<expression_node> parser::name()                          \
+  {                                                                   \
+    ENTER_RULE(name);                                                 \
+    static const token_types::type operators[] =                      \
+    {                                                                 \
+      __VA_ARGS__,                                                    \
+      token_types::INVALID                                            \
+    };                                                                \
+    auto node = accept_generic_expression(&parser::next, operators);  \
+    if (node) ACCEPT_RULE(node);                                      \
+    else REJECT_RULE();                                               \
   }
 
-  unique_ptr<expression_node> parser::accept_binary_expression()
-  {
-    ENTER_RULE(binary_expression);
+  BINARY_EXPRESSION(
+    accept_arrow,
+    accept_unary_operator,
 
-    static const token_types::type operators[] =
-    {
-      token_types::LOGICAL_OR,
-      token_types::LOGICAL_AND,
-      token_types::BITWISE_OR,
-      token_types::BITWISE_XOR,
-      token_types::BITWISE_AND,
-      token_types::APPROX_INEQUALITY,
-      token_types::APPROX_EQUALITY,
-      token_types::APPROX_LESS_THAN,
-      token_types::APPROX_GREATER_THAN,
-      token_types::APPROX_LESS_THAN_OR_EQUAL,
-      token_types::APPROX_GREATER_THAN_OR_EQUAL,
-      token_types::INEQUALITY,
-      token_types::EQUALITY,
-      token_types::LESS_THAN,
-      token_types::GREATER_THAN,
-      token_types::LESS_THAN_OR_EQUAL,
-      token_types::GREATER_THAN_OR_EQUAL,
-      token_types::LOGICAL_BITSHIFT_RIGHT,
-      token_types::LOGICAL_BITSHIFT_LEFT,
-      token_types::BITSHIFT_RIGHT,
-      token_types::BITSHIFT_LEFT,
-      token_types::SUBTRACTION,
-      token_types::ADDITION,
-      token_types::DOUBLE_MODULO,
-      token_types::MODULO,
-      token_types::DIVIDE,
-      token_types::MULTIPLICATION,
-      token_types::EXPONENT,
-      token_types::DOUBLE_QUESTION,
-      token_types::TRIPLE_DOT,
-      token_types::DOUBLE_DOT,
-      token_types::INVALID
-    };
+    token_types::SINGLE_RIGHT_ARROW,
+    token_types::SINGLE_LEFT_ARROW,
+    token_types::SINGLE_RIGHT_LONG_ARROW,
+    token_types::SINGLE_LEFT_LONG_ARROW,
+    token_types::BIDIRECTIONAL_ARROW,
+    token_types::SINGLE_RIGHT_FAT_ARROW,
+    token_types::SINGLE_RIGHT_LONG_FAT_ARROW,
+    token_types::SINGLE_LEFT_LONG_FAT_ARROW,
+    token_types::BIDIRECTIONAL_FAT_ARROW
+  );
 
-    auto node = accept_generic_expression(
-      &parser::accept_arrow_expression,
-      &parser::accept_expression,
-      operators
-    );
+  BINARY_EXPRESSION(
+    accept_expansion,
+    accept_arrow,
 
-    if (node) ACCEPT_RULE(node);
+    token_types::DOUBLE_DOT,
+    token_types::TRIPLE_DOT
+  );
 
-    REJECT_RULE();
-  }
+  BINARY_EXPRESSION(
+    accept_null_coalesce,
+    accept_expansion,
 
-  unique_ptr<expression_node> parser::accept_assignment_expression()
-  {
-    ENTER_RULE(assignment_expression);
+    token_types::DOUBLE_QUESTION
+  );
 
-    static const token_types::type operators[] =
-    {
-      token_types::ASSIGNMENT_CREATE,
-      token_types::ASSIGNMENT,
-      token_types::ASSIGNMENT_ADDITION,
-      token_types::ASSIGNMENT_SUBTRACTION,
-      token_types::ASSIGNMENT_MULTIPLICATION,
-      token_types::ASSIGNMENT_DIVIDE,
-      token_types::ASSIGNMENT_MODULO,
-      token_types::ASSIGNMENT_DOUBLE_MODULO,
-      token_types::ASSIGNMENT_EXPONENT,
-      token_types::ASSIGNMENT_BITWISE_AND,
-      token_types::ASSIGNMENT_BITWISE_OR,
-      token_types::ASSIGNMENT_BITWISE_XOR,
-      token_types::ASSIGNMENT_LOGICAL_AND,
-      token_types::ASSIGNMENT_LOGICAL_OR,
-      token_types::ASSIGNMENT_BITSHIFT_RIGHT,
-      token_types::ASSIGNMENT_BITSHIFT_LEFT,
-      token_types::ASSIGNMENT_BITSHIFT_LOGICAL_RIGHT,
-      token_types::ASSIGNMENT_BITSHIFT_LOGICAL_LEFT,
-      token_types::INVALID
-    };
+  BINARY_EXPRESSION(
+    accept_exponent,
+    accept_null_coalesce,
 
-    auto node = accept_generic_expression(
-      &parser::accept_binary_expression,
-      &parser::accept_expression,
-      operators
-    );
+    token_types::EXPONENT
+  );
 
-    if (node) ACCEPT_RULE(node);
+  BINARY_EXPRESSION(
+    accept_multiplication,
+    accept_exponent,
 
-    REJECT_RULE();
-  }
+    token_types::MULTIPLICATION,
+    token_types::DIVIDE,
+    token_types::MODULO,
+    token_types::DOUBLE_MODULO
+  );
 
-  unique_ptr<expression_node> parser::accept_pipe_expression()
-  {
-    ENTER_RULE(pipe_expression);
+  BINARY_EXPRESSION(
+    accept_addition,
+    accept_multiplication,
+    token_types::ADDITION,
+    token_types::SUBTRACTION
+  );
 
-    static const token_types::type operators[] =
-    {
-      token_types::PIPE_SINGLE_RIGHT,
-      token_types::PIPE_SINGLE_LEFT,
-      token_types::PIPE_DOUBLE_RIGHT,
-      token_types::PIPE_DOUBLE_LEFT,
-      token_types::PIPE_TRIPLE_RIGHT,
-      token_types::PIPE_TRIPLE_LEFT,
-      token_types::INVALID
-    };
+  BINARY_EXPRESSION(
+    accept_bitwise_shift,
+    accept_addition,
 
-    auto node = accept_generic_expression(
-      &parser::accept_assignment_expression,
-      &parser::accept_expression,
-      operators
-    );
+    token_types::BITSHIFT_LEFT,
+    token_types::BITSHIFT_RIGHT,
+    token_types::LOGICAL_BITSHIFT_LEFT,
+    token_types::LOGICAL_BITSHIFT_RIGHT
+  );
 
-    if (node) ACCEPT_RULE(node);
+  BINARY_EXPRESSION(
+    accept_comparison,
+    accept_bitwise_shift,
 
-    REJECT_RULE();
-  }
+    token_types::GREATER_THAN,
+    token_types::LESS_THAN,
+    token_types::GREATER_THAN_OR_EQUAL,
+    token_types::LESS_THAN_OR_EQUAL,
+    token_types::APPROX_GREATER_THAN,
+    token_types::APPROX_LESS_THAN,
+    token_types::APPROX_GREATER_THAN_OR_EQUAL,
+    token_types::APPROX_LESS_THAN_OR_EQUAL
+  );
+
+  BINARY_EXPRESSION(
+    accept_equality, // ACCEPT IT! IT'S [the current year]
+    accept_comparison,
+
+    token_types::EQUALITY,
+    token_types::INEQUALITY,
+    token_types::APPROX_EQUALITY,
+    token_types::APPROX_INEQUALITY
+  );
+
+  BINARY_EXPRESSION(
+    accept_bitwise_and,
+    accept_equality,
+
+    token_types::BITWISE_AND
+  );
+
+  BINARY_EXPRESSION(
+    accept_bitwise_xor,
+    accept_bitwise_and,
+
+    token_types::BITWISE_AND
+  );
+
+  BINARY_EXPRESSION(
+    accept_bitwise_or,
+    accept_bitwise_xor,
+
+    token_types::BITWISE_AND
+  );
+
+  BINARY_EXPRESSION(
+    accept_logical_and,
+    accept_bitwise_or,
+
+    token_types::LOGICAL_AND
+  );
+
+  BINARY_EXPRESSION(
+    accept_logical_or,
+    accept_logical_and,
+
+    token_types::LOGICAL_OR
+  );
+
+  BINARY_EXPRESSION(
+    accept_pipe,
+    accept_logical_or,
+
+    token_types::PIPE_SINGLE_RIGHT,
+    token_types::PIPE_SINGLE_LEFT,
+    token_types::PIPE_DOUBLE_RIGHT,
+    token_types::PIPE_DOUBLE_LEFT,
+    token_types::PIPE_TRIPLE_RIGHT,
+    token_types::PIPE_TRIPLE_LEFT
+  );
+
+  BINARY_EXPRESSION(
+    accept_assignment,
+    accept_pipe,
+
+    token_types::ASSIGNMENT_CREATE,
+    token_types::ASSIGNMENT,
+    token_types::ASSIGNMENT_ADDITION,
+    token_types::ASSIGNMENT_SUBTRACTION,
+    token_types::ASSIGNMENT_MULTIPLICATION,
+    token_types::ASSIGNMENT_DIVIDE,
+    token_types::ASSIGNMENT_MODULO,
+    token_types::ASSIGNMENT_DOUBLE_MODULO,
+    token_types::ASSIGNMENT_EXPONENT,
+    token_types::ASSIGNMENT_BITSHIFT_LEFT,
+    token_types::ASSIGNMENT_BITSHIFT_RIGHT,
+    token_types::ASSIGNMENT_BITSHIFT_LOGICAL_LEFT,
+    token_types::ASSIGNMENT_BITSHIFT_LOGICAL_RIGHT,
+    token_types::ASSIGNMENT_BITWISE_AND,
+    token_types::ASSIGNMENT_BITWISE_OR,
+    token_types::ASSIGNMENT_BITWISE_XOR,
+    token_types::ASSIGNMENT_LOGICAL_AND,
+    token_types::ASSIGNMENT_LOGICAL_OR
+  );
 
   // ---------------------------------------------------------------------------
 

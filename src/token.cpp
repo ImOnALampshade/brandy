@@ -166,7 +166,7 @@ namespace brandy
 
 // -----------------------------------------------------------------------------
 
-size_t std::hash<brandy::token>::operator()(const brandy::token &tok)
+size_t std::hash<brandy::token>::operator()(const brandy::token &tok) const
 {
   return tok.hash_code();
 }
