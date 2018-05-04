@@ -11,6 +11,7 @@
 #include "token.h"
 #include <memory>
 #include <stack>
+#include <vector>
 
 // -----------------------------------------------------------------------------
 
@@ -121,6 +122,7 @@ namespace brandy
     module *m_module;
     unsigned m_indent;
     std::stack<bool> m_allowNewlines;
+    std::vector<const char *> m_ruleStack;
   };
 
   template<typename node_type>

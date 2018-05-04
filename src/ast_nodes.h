@@ -326,6 +326,7 @@ namespace brandy
   {
     unique_ptr<expression_node> expression;
     token operation;
+    bool is_post_expression;
 
     AST_NODE_METHODS
   };

@@ -14,6 +14,9 @@ func foo(text : string = "Hello", x : int = 300) void -> return
 
 func baz => 3
 
+++a
+**a
+
 :label
 
 if /-[1-9][0-9]*/.match("abc")

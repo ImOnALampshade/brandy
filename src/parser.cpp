@@ -10,27 +10,31 @@
 
 // -----------------------------------------------------------------------------
 
-#define ENTER_RULE(name)  \
-  do {                    \
-   push_current();        \
+#define ENTER_RULE(name)          \
+  do {                            \
+   push_current();                \
+   m_ruleStack.push_back(#name);  \
   } while(false)
 
-#define REJECT_RULE()  \
-  do {                 \
-    pop_current();     \
-    return nullptr;    \
+#define REJECT_RULE()       \
+  do {                      \
+    pop_current();          \
+    m_ruleStack.pop_back(); \
+    return nullptr;         \
   } while(false)
 
 #define REJECT_RULE_ERROR(msg)           \
   do {                                   \
     size_t saveIndex = m_currentIndex;   \
     pop_current();                       \
+    m_ruleStack.clear();                 \
     throw parser_error(msg, saveIndex);  \
   } while(false)
 
 #define ACCEPT_RULE(retval)  \
   do {                       \
     m_currentStack.pop();    \
+    m_ruleStack.pop_back();  \
     return retval;           \
   } while(false)
 
@@ -142,7 +146,9 @@ namespace brandy
         moduleNode->statements.emplace_back(std::move(statement));
 
       else
+      {
         REJECT_RULE_ERROR("Parser stuck!");
+      }
     }
 
     ACCEPT_RULE(moduleNode);
@@ -178,8 +184,8 @@ namespace brandy
     {
       // TODO: Nice error message here? Maybe get edit distance from expected
       // word? We know they're missing something like property, or variable, etc
-      if (current_token().type() == token_types::IDENTIFIER)
-          "noop";
+      // if (current_token().type() == token_types::IDENTIFIER)
+      //   friendly_error();
 
       REJECT_RULE_ERROR("attributes missing a symbol");
     }
@@ -190,6 +196,7 @@ namespace brandy
   unique_ptr<statement_node> parser::accept_statement()
   {
     ENTER_RULE(statement);
+    NEWLINE_GAURD(true);
 
     if (!accept_indent())
       REJECT_RULE();
@@ -690,13 +697,9 @@ namespace brandy
 
     auto scopeNode = create_node<scope_node>();
 
-    while (accept_indent())
+    while (auto statement = accept_statement())
     {
-      if (auto statement = accept_statement())
-        scopeNode->statements.push_back(std::move(statement));
-
-      else
-        break;
+      scopeNode->statements.push_back(std::move(statement));
     }
 
     ACCEPT_RULE(scopeNode);
@@ -744,7 +747,28 @@ namespace brandy
         leftNode = std::move(indexNode);
       }
       else
+      {
         ACCEPT_RULE(leftNode);
+        /*
+        DISALLOW_SKIP_NEWLINES();
+        if (accept(token_types::INCREMENT) || accept(token_types::DECREMENT))
+        {
+          POP_SKIP_NEWLINES();
+
+          auto unaryNode = create_node<unary_operator_node>();
+          unaryNode->operation = last_token();
+          unaryNode->expression = std::move(leftNode);
+          unaryNode->is_post_expression = true;
+
+          leftNode = std::move(unaryNode);
+        }
+        else
+        {
+          POP_SKIP_NEWLINES();
+          ACCEPT_RULE(leftNode);
+        }
+        */
+      }
     }
   }
 
@@ -1031,6 +1055,8 @@ namespace brandy
 
     static const token_types::type unary_operators[] =
     {
+      token_types::INCREMENT,
+      token_types::DECREMENT,
       token_types::ADDITION,
       token_types::SUBTRACTION,
       token_types::BITWISE_XOR,
@@ -1039,24 +1065,28 @@ namespace brandy
       token_types::LOGICAL_NOT,
       token_types::BITWISE_NOT,
       token_types::MULTIPLICATION,
-      token_types::BITWISE_AND
+      token_types::EXPONENT,
+      token_types::BITWISE_AND,
+      token_types::SIZEOF,
+      token_types::ALIGNOF
     };
-
-    auto unaryOpNode = create_node<unary_operator_node>();
 
     for (token_types::type op : unary_operators)
     {
       if (!accept(op)) continue;
 
+      auto unaryOpNode = create_node<unary_operator_node>();
+
       unaryOpNode->operation = last_token();
       unaryOpNode->expression = accept_unary_operator();
+      unaryOpNode->is_post_expression = false;
       ACCEPT_RULE(unaryOpNode);
     }
 
     if (auto postExprNode = accept_post_expression())
       ACCEPT_RULE(postExprNode);
-    else
-      REJECT_RULE();
+
+    REJECT_RULE();
   }
 
 #define BINARY_EXPRESSION(name, next, ...)                            \
@@ -1249,6 +1279,7 @@ namespace brandy
     {
       ++i;
     }
+
     return i;
   }
 
