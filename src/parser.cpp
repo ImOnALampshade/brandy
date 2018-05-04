@@ -196,7 +196,7 @@ namespace brandy
   unique_ptr<statement_node> parser::accept_statement()
   {
     ENTER_RULE(statement);
-    NEWLINE_GAURD(true);
+    //NEWLINE_GAURD(true);
 
     if (!accept_indent())
       REJECT_RULE();
@@ -748,8 +748,6 @@ namespace brandy
       }
       else
       {
-        ACCEPT_RULE(leftNode);
-        /*
         DISALLOW_SKIP_NEWLINES();
         if (accept(token_types::INCREMENT) || accept(token_types::DECREMENT))
         {
@@ -767,7 +765,6 @@ namespace brandy
           POP_SKIP_NEWLINES();
           ACCEPT_RULE(leftNode);
         }
-        */
       }
     }
   }

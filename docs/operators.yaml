@@ -1,6 +1,6 @@
 - - "exp as type"
-  # - "exp++" (Not implemented)
-  # - "exp--" (Not implemented)
+  - "exp++"
+  - "exp--"
   - "exp()"
   - "exp[]"
   - "exp.ident"
