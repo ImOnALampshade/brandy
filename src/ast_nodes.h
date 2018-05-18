@@ -151,6 +151,7 @@ namespace brandy
   {
     unique_vec<symbol_node> symbols;
     unique_vec<statement_node> statements;
+    symbol_table symbols;
 
     AST_NODE_METHODS
   };
@@ -425,6 +426,7 @@ namespace brandy
   struct scope_node : abstract_node
   {
     unique_vec<statement_node> statements;
+    symbol_table symbols;
 
     AST_NODE_METHODS
   };

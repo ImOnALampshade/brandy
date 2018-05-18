@@ -137,6 +137,8 @@ namespace brandy
 
     auto moduleNode = create_node<module_node>();
 
+    m_symbolTableStack.push_table(&moduleNode->symbols);
+
     while (!at_end_of_stream())
     {
       if (auto symbol = accpet_symbol())
@@ -147,10 +149,12 @@ namespace brandy
 
       else
       {
+        m_symbolTableStack.pop_table();
         REJECT_RULE_ERROR("Parser stuck!");
       }
     }
 
+    m_symbolTableStack.pop_table();
     ACCEPT_RULE(moduleNode);
   }
 
@@ -179,6 +183,11 @@ namespace brandy
     {
       propertyNode->attributes = std::move(attributes);
       ACCEPT_RULE(propertyNode);
+    }
+    else if (auto varNode = accept_var())
+    {
+      varNode->attributes = std::move(attributes);
+      ACCEPT_RULE(varNode);
     }
     else if (attributes)
     {
@@ -488,6 +497,43 @@ namespace brandy
     REJECT_RULE();
   }
 
+  unique_ptr<var_node> accept_var()
+  {
+    ENTER_RULE(var);
+
+    if (accept(token_types::IDENTIFIER))
+    {
+      auto varNode.= create_node<var_node>();
+
+      if (accept(token_types::ASSIGNMENT_CREATE))
+      {
+        varNode->initial_value = accept_expression();
+        ACCEPT_RULE(varNode);
+      }
+
+      if (accept(token_types::COLON))
+      {
+        varNode->type = accept_type();
+        if (!varNode->type)
+          REJECT_RULE_ERROR("Expected type following colon in variable declaration");
+      }
+
+      if (accept(token_types::ASSIGNMENT))
+      {
+        varNode->initial_value = accept_expression();
+        if (!varNode->initial_value)
+          REJECT_RULE_ERROR("Expected expression following = in variable declaration");
+
+        ACCEPT_RULE(varNode);
+      }
+
+      if (varNode->type)
+        ACCEPT_RULE(varNode);
+    }
+
+    REJECT_RULE();
+  }
+
   // ---------------------------------------------------------------------------
 
   unique_ptr<return_node> parser::accept_return()
@@ -696,12 +742,14 @@ namespace brandy
     INDENT_GAURD();
 
     auto scopeNode = create_node<scope_node>();
+    m_symbolTableStack.push_table(&scopeNode->symbols);
 
     while (auto statement = accept_statement())
     {
       scopeNode->statements.push_back(std::move(statement));
     }
 
+    m_symbolTableStack.pop_table();
     ACCEPT_RULE(scopeNode);
   }
 

@@ -1,0 +1,6 @@
+class vec2
+  func @create (_x : float = 0, _y : float = 0) ->
+    this.x = _x
+    this.y = _y
+
+x : vec2

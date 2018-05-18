@@ -38,6 +38,7 @@ namespace brandy
     unique_ptr<property_node> accept_property();
     unique_ptr<label_node> accept_label();
     unique_ptr<parameter_node> accept_parameter();
+    unique_ptr<var_node> accept_var();
 
     unique_ptr<return_node> accept_return();
     unique_ptr<break_node> accept_break();
@@ -123,6 +124,7 @@ namespace brandy
     unsigned m_indent;
     std::stack<bool> m_allowNewlines;
     std::vector<const char *> m_ruleStack;
+    symbol_table_stack m_symbolTableStack;
   };
 
   template<typename node_type>
