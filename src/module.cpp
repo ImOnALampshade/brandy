@@ -64,7 +64,18 @@ namespace brandy
       return;
     }
   }
+  // ---------------------------------------------------------------------------
 
+  module_node *module::root_node()
+  {
+    return m_module.get();
+  }
+
+  const module_node *module::root_node() const
+  {
+    return m_module.get();
+  }
+  
   // ---------------------------------------------------------------------------
 
   static const char *backtrack_to_newline(const char *s)
@@ -75,7 +86,7 @@ namespace brandy
     return s + 1;
   }
 
-  void module::print_error(error_base &e)
+  void module::output_msg(error &e)
   {
     using std::cout;
     using std::endl;
@@ -87,13 +98,25 @@ namespace brandy
     const token &t = m_tokens[tokenIndex];
     const char *middleLine = backtrack_to_newline(t.text());
 
-    std::string message = e.error_message();
+    std::string message = e.message;
 
     size_t lineNo = t.line_number();
     size_t colNo = (size_t)(t.text() - middleLine);
 
+    const char *sevStr;
+    switch (e.error_severity)
+    {
+    case error::sev_warn:
+      sevStr = "warning";
+      break;
+    case error::sev_err:
+    case error::sev_term:
+      sevStr = "error";
+      break;
+    }
+
     cout << termcolor::bold << m_filePath << ":" <<  lineNo << ":" << colNo << ": ";
-    cout << termcolor::red << e.severity() << ": " << termcolor::reset << termcolor::bold;
+    cout << termcolor::red << e.error_severity << ": " << termcolor::reset << termcolor::bold;
     cout << message << "\n    ";
 
     size_t i = e.token_index;
@@ -130,6 +153,12 @@ namespace brandy
     cout << termcolor::reset;
 
     cout << token_types::names[t.type()] << " (" << t << ") :" << e.token_index << "\n";
+
+    if (e.error_severity == error::sev_term)
+    {
+      cout << "Terminal error, aborting compilation. More errors may exist.";
+      abort();
+    }
   }
 
   // ---------------------------------------------------------------------------

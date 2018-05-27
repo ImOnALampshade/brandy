@@ -15,7 +15,7 @@ namespace brandy
   {
     auto found = m_members.find(name);
 
-    if (found == m_members.end())
+    if (found != m_members.end())
       return found->second;
     else
       return nullptr;

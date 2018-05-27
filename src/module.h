@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "error_base.h"
+#include "ast_nodes.h"
+#include "error.h"
 #include "token.h"
 #include <memory>
 #include <vector>
@@ -19,21 +20,19 @@ namespace brandy
 {
   // ---------------------------------------------------------------------------
 
-  class module
+  struct module
   {
-  public:
     void load(const char *file);
 
-    // ast_root &root_node();
-    // const ast_root &root_node() const;
+    module_node *root_node();
+    const module_node *root_node() const;
 
-    void print_error(error_base &e);
-
-  // private:
+    void output_msg(error &e);
+    
     std::string m_filePath;
     std::vector<char> m_text;
     std::vector<token> m_tokens;
-    // ast_root
+    std::unique_ptr<module_node> m_module;
   };
 
   // ---------------------------------------------------------------------------

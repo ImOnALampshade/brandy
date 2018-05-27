@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 
 #include "parser.h"
-#include "error_base.h"
+#include "error.h"
 #include <assert.h>
 #include <iostream>
 
@@ -23,12 +23,12 @@
     return nullptr;         \
   } while(false)
 
-#define REJECT_RULE_ERROR(msg)           \
-  do {                                   \
-    size_t saveIndex = m_currentIndex;   \
-    pop_current();                       \
-    m_ruleStack.clear();                 \
-    throw parser_error(msg, saveIndex);  \
+#define REJECT_RULE_ERROR(msg)                    \
+  do {                                            \
+    size_t saveIndex = m_currentIndex;            \
+    pop_current();                                \
+    m_ruleStack.clear();                          \
+    throw error(saveIndex, msg, error::sev_term); \
   } while(false)
 
 #define ACCEPT_RULE(retval)  \
@@ -53,6 +53,10 @@
 
 #define INDENT_GAURD() indent_gaurd __definedIndentGaurd(this)
 #define NEWLINE_GAURD(value) newline_gaurd __definedNewlineGaurd(this, value)
+#define SYMBOL_TABLE_GAURD(table) symbol_table_gaurd __defineSymbolTableGaurd(this, &(table))
+
+#define PUSH_SYMBOL_TABLE(table) m_symbolTableStack.push_table(&(table))
+#define POP_SYMBOL_TABLE() m_symbolTableStack.pop_table()
 
 namespace brandy
 {
@@ -91,25 +95,23 @@ namespace brandy
 
       parser *m_parser;
     };
+
+    struct symbol_table_gaurd
+    {
+      symbol_table_gaurd(parser *p, symbol_table *table) :
+        m_parser(p)
+      {
+        m_parser->m_symbolTableStack.push_table(table);
+      }
+
+      ~symbol_table_gaurd()
+      {
+        m_parser->m_symbolTableStack.pop_table();
+      }
+
+      parser *m_parser;
+    };
   }
-
-  struct parser_error : error_base
-  {
-    parser_error(const char *msg, size_t tokenIndex) :
-      error_base(tokenIndex),
-      m_msg(msg)
-    {
-    }
-
-    const char *m_msg;
-
-    std::string error_message()
-    {
-      return m_msg;
-    }
-
-    const char *severity() { return "error"; }
-  };
 
   // ---------------------------------------------------------------------------
 
@@ -137,11 +139,11 @@ namespace brandy
 
     auto moduleNode = create_node<module_node>();
 
-    m_symbolTableStack.push_table(&moduleNode->symbols);
+    PUSH_SYMBOL_TABLE(moduleNode->sym_table);
 
     while (!at_end_of_stream())
     {
-      if (auto symbol = accpet_symbol())
+      if (auto symbol = accept_symbol())
         moduleNode->symbols.emplace_back(std::move(symbol));
 
       else if (auto statement = accept_statement())
@@ -150,45 +152,49 @@ namespace brandy
       else
       {
         m_symbolTableStack.pop_table();
-        REJECT_RULE_ERROR("Parser stuck!");
+        REJECT_RULE_ERROR("Parser error: unexpected token");
       }
     }
 
-    m_symbolTableStack.pop_table();
+    POP_SYMBOL_TABLE();
     ACCEPT_RULE(moduleNode);
   }
 
   // ---------------------------------------------------------------------------
 
-  unique_ptr<symbol_node> parser::accpet_symbol()
+  unique_ptr<symbol_node> parser::accept_symbol()
   {
     ENTER_RULE(symbol);
 
     if (!accept_indent())
       REJECT_RULE();
 
-    auto attributes = accept_attributes();
+    auto attributes = accept_attributes(); 
 
     if (auto functionNode = accept_function())
     {
       functionNode->attributes = std::move(attributes);
+      add_symbol(functionNode->symbol);
       ACCEPT_RULE(functionNode);
     }
     else if (auto classNode = accept_class())
     {
       classNode->attributes = std::move(attributes);
+      add_symbol(classNode->symbol);
       ACCEPT_RULE(classNode);
     }
     else if (auto propertyNode = accept_property())
     {
       propertyNode->attributes = std::move(attributes);
+      add_symbol(propertyNode->symbol);
       ACCEPT_RULE(propertyNode);
     }
-    else if (auto varNode = accept_var())
-    {
-      varNode->attributes = std::move(attributes);
-      ACCEPT_RULE(varNode);
-    }
+    //else if (auto varNode = accept_var())
+    //{
+    //  varNode->attributes = std::move(attributes);
+    //  add_symbol(varNode->symbol);
+    //  ACCEPT_RULE(varNode);
+    //}
     else if (attributes)
     {
       // TODO: Nice error message here? Maybe get edit distance from expected
@@ -284,9 +290,10 @@ namespace brandy
     {
       auto functionNode = create_node<function_node>();
       functionNode->is_method = (last_token().type() == token_types::METHOD);
-
       expect(token_types::IDENTIFIER);
       functionNode->name = last_token();
+
+      SYMBOL_TABLE_GAURD(functionNode->sym_table);
 
       if (accept(token_types::OPEN_PAREN))
       {
@@ -295,7 +302,10 @@ namespace brandy
           auto param = accept_parameter();
 
           if (param)
+          {
+            add_symbol(param->symbol);
             functionNode->parameters.push_back(std::move(param));
+          }
           else
             REJECT_RULE_ERROR("Expected parameter");
         } while(accept(token_types::COMMA));
@@ -303,7 +313,7 @@ namespace brandy
         expect(token_types::CLOSE_PAREN);
       }
 
-      functionNode->return_type = accept_type();
+      functionNode->return_type_node = accept_type();
 
       if (accept(token_types::SINGLE_RIGHT_ARROW))
       {
@@ -345,6 +355,8 @@ namespace brandy
       expect(token_types::IDENTIFIER);
       classNode->name = last_token();
 
+      SYMBOL_TABLE_GAURD(classNode->sym_table);
+
       if (accept(token_types::EXTENDS))
         do
         {
@@ -357,8 +369,11 @@ namespace brandy
       if (accept(token_types::DOCUMENTION_BLOCK))
         classNode->doc = last_token();
 
-      while (auto symbol = accpet_symbol())
+      while (auto symbol = accept_symbol())
+      {
+        add_symbol(symbol->symbol);
         classNode->members.push_back(std::move(symbol));
+      }
 
       ACCEPT_RULE(classNode);
     }
@@ -497,13 +512,21 @@ namespace brandy
     REJECT_RULE();
   }
 
-  unique_ptr<var_node> accept_var()
+  unique_ptr<var_node> parser::accept_var()
   {
     ENTER_RULE(var);
 
     if (accept(token_types::IDENTIFIER))
     {
-      auto varNode.= create_node<var_node>();
+      auto varNode = create_node<var_node>();
+      varNode->name = last_token();
+      bool allowDirectAssign = true;
+      
+      if (symbol *shadowed = m_symbolTableStack.resolve_name(varNode->name))
+      {
+        // TODO: emit variable shadow warning
+        allowDirectAssign = !shadowed->is_variable();
+      }
 
       if (accept(token_types::ASSIGNMENT_CREATE))
       {
@@ -513,12 +536,13 @@ namespace brandy
 
       if (accept(token_types::COLON))
       {
+        allowDirectAssign = true;
         varNode->type = accept_type();
         if (!varNode->type)
           REJECT_RULE_ERROR("Expected type following colon in variable declaration");
       }
 
-      if (accept(token_types::ASSIGNMENT))
+      if (allowDirectAssign && accept(token_types::ASSIGNMENT))
       {
         varNode->initial_value = accept_expression();
         if (!varNode->initial_value)
@@ -591,7 +615,10 @@ namespace brandy
     if (accept(token_types::IF))
     {
       auto ifNode = create_node<if_node>();
+      SYMBOL_TABLE_GAURD(ifNode->sym_table);
+      
       ifNode->condition = accept_expression();
+
 
       if (!ifNode->condition)
         REJECT_RULE_ERROR("Expected an expression following if");
@@ -631,6 +658,8 @@ namespace brandy
     if (accept(token_types::WHILE))
     {
       auto whileNode = create_node<while_node>();
+      SYMBOL_TABLE_GAURD(whileNode->sym_table);
+
       whileNode->condition = accept_expression();
 
       if (!whileNode->condition)
@@ -651,11 +680,14 @@ namespace brandy
     if (accept(token_types::FOR))
     {
       auto forNode = create_node<for_node>();
+      SYMBOL_TABLE_GAURD(forNode->sym_table);
 
       do
       {
         expect(token_types::IDENTIFIER);
         forNode->names.push_back(last_token());
+
+        // add_symbol(???);
       } while(accept(token_types::COMMA));
 
       expect(token_types::IN);
@@ -742,7 +774,7 @@ namespace brandy
     INDENT_GAURD();
 
     auto scopeNode = create_node<scope_node>();
-    m_symbolTableStack.push_table(&scopeNode->symbols);
+    m_symbolTableStack.push_table(&scopeNode->sym_table);
 
     while (auto statement = accept_statement())
     {
@@ -758,6 +790,12 @@ namespace brandy
   unique_ptr<expression_node> parser::accept_expression()
   {
     ENTER_RULE(expression);
+
+    if (auto exp = accept_var())
+    {
+      add_symbol(exp->symbol);
+      ACCEPT_RULE(exp);
+    }
 
     if (auto exp = accept_assignment())
       ACCEPT_RULE(exp);
@@ -976,6 +1014,8 @@ namespace brandy
     {
       auto lambdaNode = create_node<lambda_node>();
 
+      SYMBOL_TABLE_GAURD(lambdaNode->sym_table);
+
       if (accept(token_types::OPEN_PAREN))
       {
         do
@@ -983,7 +1023,10 @@ namespace brandy
           auto param = accept_parameter();
 
           if (param)
+          {
+            add_symbol(param->symbol);
             lambdaNode->parameters.push_back(std::move(param));
+          }
           else
             REJECT_RULE_ERROR("Expected parameter");
         } while(accept(token_types::COMMA));
@@ -991,7 +1034,7 @@ namespace brandy
         expect(token_types::CLOSE_PAREN);
       }
 
-      lambdaNode->return_type = accept_type();
+      lambdaNode->return_type_node = accept_type();
 
       if (accept(token_types::SINGLE_RIGHT_ARROW))
       {
@@ -1287,7 +1330,6 @@ namespace brandy
     accept_assignment,
     accept_pipe,
 
-    token_types::ASSIGNMENT_CREATE,
     token_types::ASSIGNMENT,
     token_types::ASSIGNMENT_ADDITION,
     token_types::ASSIGNMENT_SUBTRACTION,
@@ -1306,6 +1348,42 @@ namespace brandy
     token_types::ASSIGNMENT_LOGICAL_AND,
     token_types::ASSIGNMENT_LOGICAL_OR
   );
+  
+  // ---------------------------------------------------------------------------
+  
+  void parser::add_symbol(symbol *s)
+  {
+    if (s->is_function())
+    {
+      // Need to add to function symbol
+      // Yes this is a memory leak, function_symbol never gets deleted
+      // But right now that doesn't matter, becuase the compiler process will
+      // end and destroy all the leftovers.
+      // TODO: fix this in the future somehow. Need to decide who owns this.
+      // Maybe just make a vector and clean it up with a cleanup function?
+       
+      symbol *resolvedName = m_symbolTableStack.m_tables.back()->resolve_name(s->name());
+      function_symbol *fnSymbol;
+
+      if (resolvedName)
+      {
+        fnSymbol = dynamic_cast<function_symbol *>(resolvedName);
+        if (!fnSymbol)
+        {
+          // TODO: type error
+        }
+      }
+      else
+      {
+        fnSymbol = new function_symbol;
+        m_symbolTableStack.m_tables.back()->add_symbol(s->name(), fnSymbol);
+      }
+
+      fnSymbol->m_concreteFunctions.push_back(static_cast<concrete_function_symbol *>(s));
+    }
+    else
+      m_symbolTableStack.m_tables.back()->add_symbol(s->name(), s);
+  }
 
   // ---------------------------------------------------------------------------
 
@@ -1344,7 +1422,7 @@ namespace brandy
   void parser::expect(token_types::type type)
   {
     if (!accept(type))
-      throw parser_error("Expected a different token here", m_currentIndex);
+      throw error(m_currentIndex, "Expected a different token here", error::sev_term);
   }
 
   void parser::expect_semicolon()
@@ -1358,7 +1436,7 @@ namespace brandy
       m_currentIndex = next_valid_token();
 
       if (current_token().line_number() == lineNo)
-        throw parser_error("Expected a semicolon or newline", m_currentIndex);
+        throw error(m_currentIndex, "Expected a semicolon or newline", error::sev_term);
     }
   }
 

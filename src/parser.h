@@ -28,7 +28,7 @@ namespace brandy
 
     unique_ptr<module_node> accept_module();
 
-    unique_ptr<symbol_node> accpet_symbol();
+    unique_ptr<symbol_node> accept_symbol();
     unique_ptr<statement_node> accept_statement();
 
     unique_ptr<attribute_node> accept_attributes();
@@ -92,6 +92,8 @@ namespace brandy
     unique_ptr<expression_node> accept_logical_or();
     unique_ptr<expression_node> accept_pipe();
     unique_ptr<expression_node> accept_assignment();
+
+    void add_symbol(symbol *s);
 
     size_t next_valid_token();
     bool accept(token_types::type type);

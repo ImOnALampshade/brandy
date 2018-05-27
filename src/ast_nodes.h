@@ -21,6 +21,8 @@ namespace brandy
 {
   // ---------------------------------------------------------------------------
 
+  struct module;
+
   template<typename T>
   using unique_vec = std::vector<std::unique_ptr<T>>;
   using std::unique_ptr;
@@ -151,7 +153,8 @@ namespace brandy
   {
     unique_vec<symbol_node> symbols;
     unique_vec<statement_node> statements;
-    symbol_table symbols;
+    symbol_table sym_table;
+    brandy::module *module;
 
     AST_NODE_METHODS
   };
@@ -163,19 +166,21 @@ namespace brandy
     AST_NODE_METHODS
   };
 
-  struct symbol_node : statement_node
+  struct expression_node : statement_node
   {
-    token name;
-    token doc;
-    unique_ptr<attribute_node> attributes;
-    brandy::symbol *symbol;
+    type_symbol *resulting_type;
 
     AST_NODE_METHODS
   };
 
-  struct expression_node : statement_node
+  struct symbol_node : expression_node
   {
-    type_symbol *resulting_type;
+    symbol_node(brandy::symbol *);
+
+    token name;
+    token doc;
+    unique_ptr<attribute_node> attributes;
+    brandy::symbol *symbol;
 
     AST_NODE_METHODS
   };
@@ -230,6 +235,7 @@ namespace brandy
     unique_ptr<expression_node> condition;
     unique_ptr<if_node> elif_clause;
     unique_ptr<scope_node> inner_scope;
+    symbol_table sym_table;
 
     AST_NODE_METHODS
   };
@@ -238,6 +244,7 @@ namespace brandy
   {
     unique_ptr<expression_node> condition;
     unique_ptr<scope_node> inner_scope;
+    symbol_table sym_table;
 
     AST_NODE_METHODS;
   };
@@ -247,32 +254,40 @@ namespace brandy
     std::vector<token> names;
     unique_ptr<expression_node> expression;
     unique_ptr<scope_node> inner_scope;
+    symbol_table sym_table;
 
     AST_NODE_METHODS
   };
+
+  // ---------------------------------------------------------------------------
 
   struct import_node : symbol_node
   {
     token path;
     brandy::import_symbol import_symbol;
 
+    import_node();
+
     AST_NODE_METHODS
   };
-
-  // ---------------------------------------------------------------------------
 
   struct label_node : symbol_node
   {
+    brandy::label_symbol label_symbol;
+
+    label_node();
+
     AST_NODE_METHODS
   };
-
-  // ---------------------------------------------------------------------------
 
   struct class_node : symbol_node
   {
     unique_vec<type_node> base_classes;
     unique_vec<symbol_node> members;
-    brandy::type_symbol type_symbol;
+    brandy::class_type_symbol type_symbol;
+    symbol_table sym_table;
+
+    class_node();
 
     AST_NODE_METHODS
   };
@@ -280,10 +295,13 @@ namespace brandy
   struct function_node : symbol_node
   {
     unique_vec<parameter_node> parameters;
-    unique_ptr<type_node> return_type;
+    unique_ptr<type_node> return_type_node;
     unique_ptr<scope_node> inner_scope;
     bool is_method;
-    brandy::function_symbol function_symbol;
+    brandy::concrete_function_symbol function_symbol;
+    symbol_table sym_table;
+
+    function_node();
 
     AST_NODE_METHODS
   };
@@ -294,11 +312,15 @@ namespace brandy
     unique_ptr<expression_node> initial_value;
     brandy::variable_symbol variable_symbol;
 
+    var_node();
+
     AST_NODE_METHODS
   };
 
   struct parameter_node : var_node
   {
+    parameter_node();
+
     AST_NODE_METHODS
   };
 
@@ -308,6 +330,8 @@ namespace brandy
     unique_ptr<scope_node> getter;
     unique_ptr<scope_node> setter;
     brandy::property_symbol property_symbol;
+
+    property_node();
 
     AST_NODE_METHODS
   };
@@ -319,6 +343,7 @@ namespace brandy
     unique_ptr<expression_node> left;
     unique_ptr<expression_node> right;
     token operation;
+    concrete_function_symbol *implementation;
 
     AST_NODE_METHODS
   };
@@ -328,6 +353,7 @@ namespace brandy
     unique_ptr<expression_node> expression;
     token operation;
     bool is_post_expression;
+    concrete_function_symbol *implementation;
 
     AST_NODE_METHODS
   };
@@ -364,8 +390,10 @@ namespace brandy
   struct lambda_node : expression_node
   {
     unique_vec<parameter_node> parameters;
-    unique_ptr<type_node> return_type;
+    unique_ptr<type_node> return_type_node;
     unique_ptr<scope_node> inner_scope;
+    symbol_table sym_table;
+    type_symbol *return_type;
 
     AST_NODE_METHODS
   };
@@ -373,6 +401,7 @@ namespace brandy
   struct name_reference_node : expression_node
   {
     token name;
+    brandy::symbol *symbol;
 
     AST_NODE_METHODS
   };
@@ -389,6 +418,7 @@ namespace brandy
   struct member_access_node : post_expression_node
   {
     token member_name;
+    brandy::symbol *symbol;
 
     AST_NODE_METHODS
   };
@@ -396,6 +426,7 @@ namespace brandy
   struct call_node : post_expression_node
   {
     unique_vec<expression_node> arguments;
+    concrete_function_symbol *implementation;
 
     AST_NODE_METHODS
   };
@@ -410,6 +441,7 @@ namespace brandy
   struct index_node : post_expression_node
   {
     unique_ptr<expression_node> index;
+    concrete_function_symbol *implementation;
 
     AST_NODE_METHODS
   };
@@ -419,6 +451,7 @@ namespace brandy
   struct type_node : abstract_node
   {
     std::vector<token> name;
+    brandy::type_symbol *type_symbol;
 
     AST_NODE_METHODS
   };
@@ -426,7 +459,7 @@ namespace brandy
   struct scope_node : abstract_node
   {
     unique_vec<statement_node> statements;
-    symbol_table symbols;
+    symbol_table sym_table;
 
     AST_NODE_METHODS
   };

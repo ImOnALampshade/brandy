@@ -1,0 +1,11 @@
+x : int = 3 // Should be var
+x = 3 // Should be exp
+y = 3 // Should be var
+z = 3 // Should be var
+
+func a ->
+
+func foo ->
+  x = 3 // Should be exp
+  y := 3 // Should be var
+  a = 3 // Should be var

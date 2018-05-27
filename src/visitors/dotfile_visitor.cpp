@@ -71,6 +71,7 @@ namespace brandy
   DOTFILE_VISTOR(function_node, "function", node->name);
   DOTFILE_VISTOR(parameter_node, "parameter", node->name);
   DOTFILE_VISTOR(property_node, "property", node->name);
+  DOTFILE_VISTOR(var_node, "var", node->name);
   DOTFILE_VISTOR(binary_operator_node, "binary operation", node->operation);
   DOTFILE_VISTOR(unary_operator_node, "unary operation", node->operation);
   DOTFILE_VISTOR(absolute_value_node, "absolute value");

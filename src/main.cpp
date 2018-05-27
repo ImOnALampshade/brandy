@@ -1,55 +1,65 @@
 #include "module.h"
 #include "lexer.h"
 #include "parser.h"
-#include "error_base.h"
+#include "error.h"
+#include "symbols/builtins.h"
 #include "../lib/argparse/argparse.hpp"
 #include "visitors/dotfile_visitor.h"
 #include "visitors/parent_hookup_visitor.h"
+#include "visitors/symbol_resolver_visitor.h"
 #include <iostream>
 
 int main(int argc, const char **argv)
 {
   using namespace brandy;
 
+#ifdef _WIN32
+  // So that the VS debugger console window will stay open
+  atexit([]() {
+    std::cin.get();
+  });
+#endif
+
   setup_lexer();
 
-  ArgumentParser parser;
+  ArgumentParser argParser;
 
   // add some arguments to search for
-  parser.addArgument("-i", "--input", 1, false);
-  parser.addArgument("--dotfile", 1);
+  argParser.addArgument("-i", "--input", 1, false);
+  argParser.addArgument("--dotfile", 1);
 
   // parse the command-line arguments - throws if invalid format
-  parser.parse(argc, argv);
+  argParser.parse(argc, argv);
 
-  // if we get here, the configuration is valid
+  auto inputFile = argParser.retrieve<std::string>("input");
+  auto outputDotfile = argParser.retrieve<std::string>("dotfile");
+
   module mainModule;
-
-  auto inputFile = parser.retrieve<std::string>("input");
-  auto outputDotfile = parser.retrieve<std::string>("dotfile");
-
-  mainModule.load(inputFile.c_str());
-  struct parser p(&mainModule);
-
-   //size_t i = 0;
-   //for (auto &token : mainModule.m_tokens)
-   //{
-   //  std::cout << i++ << ": " << token_types::names[token.type()] << ": (" << token << ")" << std::endl;
-   //}
 
   try
   {
-    auto moduleNode = p.accept_module();
-
-    parent_hookup_visitor parentVisitor;
-    walk_node(moduleNode, &parentVisitor);
-
-    dotfile_visitor visitor(outputDotfile.c_str());
-    walk_node(moduleNode, &visitor);
+    struct parser p(&mainModule);
+    mainModule.load(inputFile.c_str());
+    mainModule.m_module = p.accept_module();
   }
-  catch(error_base &e)
+  catch(error &e)
   {
-    mainModule.print_error(e);
-    // std::cin.get();
+    mainModule.output_msg(e);
+    return 1;
   }
+
+  mainModule.root_node()->module = &mainModule;
+
+  create_builtin();
+
+  parent_hookup_visitor parentVisitor;
+  walk_node(mainModule.root_node(), &parentVisitor);
+
+  dotfile_visitor visitor(outputDotfile.c_str());
+  walk_node(mainModule.root_node(), &visitor);
+
+  symbol_resolver_visitor srv;
+  walk_node(mainModule.root_node(), &srv);
+
+  return 0;
 }

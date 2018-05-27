@@ -199,7 +199,7 @@ namespace brandy
   {
     WALK_BASE(symbol_node);
     WALK_ALL(parameters);
-    WALK(return_type);
+    WALK(return_type_node);
     WALK(inner_scope);
   }
 
@@ -264,7 +264,7 @@ namespace brandy
   {
     WALK_BASE(expression_node);
     WALK_ALL(parameters);
-    WALK(return_type);
+    WALK(return_type_node);
     WALK(inner_scope);
   }
 
@@ -313,6 +313,24 @@ namespace brandy
     WALK_ALL(statements);
   }
 
+  // ---------------------------------------------------------------------------
+  
+  symbol_node::symbol_node(brandy::symbol *s) :
+    symbol(s)
+  {
+    s->m_astNode = this;
+  }
+  
+  // ---------------------------------------------------------------------------
+
+  import_node::import_node() : symbol_node(&import_symbol) { }
+  label_node::label_node() : symbol_node(&label_symbol) { }
+  class_node::class_node() : symbol_node(&type_symbol) { }
+  function_node::function_node() : symbol_node(&function_symbol) { }
+  var_node::var_node() : symbol_node(&variable_symbol) { }
+  parameter_node::parameter_node() : var_node() { }
+  property_node::property_node() : symbol_node(&property_symbol) { }
+  
   // ---------------------------------------------------------------------------
 }
 
