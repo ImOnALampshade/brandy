@@ -2,7 +2,9 @@
 
 Brandy programming language.
 
-The ease of Python in a C/C++ level language!
+The ease of Python in a lower level language!
+
+**The reference compiler is still in active developement, as is the language spec. There is currently no compiler for brandy. Stay tuned for updates.**
 
 # IMPORTANT NOTE
 
