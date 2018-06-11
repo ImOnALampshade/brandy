@@ -6,6 +6,7 @@ set(SOURCES
   module.cpp
   parser.cpp
   ast_nodes.cpp
+  at_nodes.cpp
   visitors/dotfile_visitor.cpp
   visitors/parent_hookup_visitor.cpp
   visitors/symbol_walker_visitor.cpp
@@ -23,6 +24,7 @@ set(HEADERS
   parser.h
   ast_nodes.h
   ast_nodes_decl.h
+  at_nodes.h
   error.h
   visitors/dotfile_visitor.h
   visitors/parent_hookup_visitor.h
@@ -41,6 +43,7 @@ source_group("Token" FILES token.h token.cpp token_types.inl)
 source_group("Module" FILES module.h module.cpp)
 source_group("Parser" FILES parser.h parser.cpp)
 source_group("AST" FILES ast_nodes.h ast_nodes.cpp ast_nodes_decl.h)
+source_group("Action Tree" FILES at_nodes.h at_nodes.cpp)
 source_group("Visitors\\Dotfile" FILES visitors/dotfile_visitor.h visitors/dotfile_visitor.cpp)
 source_group("Visitors\\Parent Hookup" FILES visitors/parent_hookup_visitor.h visitors/parent_hookup_visitor.cpp)
 source_group("Visitors\\Symbol Walker" FILES visitors/symbol_walker_visitor.h visitors/symbol_walker_visitor.cpp)
