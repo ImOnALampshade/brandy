@@ -70,7 +70,7 @@ namespace brandy
 
   void lexer::add_edge(state_reference from, state_reference to, char c)
   {
-    m_states[from].edges[unsigned char(c)] = to;
+    m_states[from].edges[static_cast<unsigned char>(c)] = to;
   }
 
   void lexer::add_letter_edge(state_reference from, state_reference to)
@@ -85,7 +85,7 @@ namespace brandy
 
   void lexer::add_default_edge(state_reference from, state_reference to)
   {
-    m_states[from].default = to;
+    m_states[from].default_edge = to;
   }
 
   lexer::state_reference lexer::get_edge(state_reference state, char c) const
@@ -147,7 +147,7 @@ namespace brandy
         add_edge(s1, c, edge.second);
       }
 
-      add_edge(s1, "default", s1.default);
+      add_edge(s1, "default", s1.default_edge);
       add_edge(s1, "letter", s1.letter_edge);
       add_edge(s1, "number", s1.number_edge);
     }
@@ -166,8 +166,8 @@ namespace brandy
       return &m_states[state->letter_edge];
     else if (state->number_edge != INVALID_EDGE && isdigit(c))
       return &m_states[state->number_edge];
-    else if (state->default != INVALID_EDGE)
-      return &m_states[state->default];
+    else if (state->default_edge != INVALID_EDGE)
+      return &m_states[state->default_edge];
     else
       return nullptr;
   }
@@ -178,7 +178,7 @@ namespace brandy
     accept(accept),
     letter_edge(INVALID_EDGE),
     number_edge(INVALID_EDGE),
-    default(INVALID_EDGE)
+    default_edge(INVALID_EDGE)
   {
   }
 
@@ -466,11 +466,11 @@ namespace brandy
     }
 
     {
-      auto not = gBrandyLexer.create_state(token_types::LOGICAL_NOT);
+      auto not_state = gBrandyLexer.create_state(token_types::LOGICAL_NOT);
       auto inequality = gBrandyLexer.create_state(token_types::INEQUALITY);
 
-      gBrandyLexer.add_edge(root, not, '!');
-      gBrandyLexer.add_edge(not, inequality, '=');
+      gBrandyLexer.add_edge(root, not_state, '!');
+      gBrandyLexer.add_edge(not_state, inequality, '=');
     }
 
     {

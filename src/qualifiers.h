@@ -24,7 +24,7 @@ namespace brandy
     };
 #undef QUALIFIER_VALUE
 
-    const char *names[];
+    extern const char *names[];
   }
 
   // ---------------------------------------------------------------------------

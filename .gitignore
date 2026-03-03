@@ -36,3 +36,7 @@ Release/
 # We want VS to run in the right directory, and the working directory for the debugger is 
 # saved in this file
 #*.user
+
+# Linux build artifacts
+build/
+brandy

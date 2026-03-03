@@ -51,7 +51,7 @@ namespace brandy
       std::map<char, size_t> edges;
       size_t                 number_edge;
       size_t                 letter_edge;
-      size_t                 default;
+      size_t                 default_edge;
       size_t                 index;
     };
 

@@ -143,7 +143,7 @@ namespace brandy
       break;
 
     case token_types::GREATER_THAN_OR_EQUAL:
-      nameToken = token("@greather_than_or_equal", token_types::IDENTIFIER);
+      nameToken = token("@greater_than_or_equal", token_types::IDENTIFIER);
       break;
 
     case token_types::LESS_THAN_OR_EQUAL:
