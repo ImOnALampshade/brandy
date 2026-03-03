@@ -164,7 +164,23 @@ namespace brandy
           if (dynamic_cast<type_indirect_node *>(post.get()))
             base = llvm::PointerType::get(base, 0);
           else if (auto *arr = dynamic_cast<type_array_node *>(post.get()))
-            base = llvm::ArrayType::get(base, 0); // size unknown at compile time → 0
+          {
+            // If the size expression is a known integer constant, use it;
+            // otherwise fall back to a pointer (unsized array).
+            if (arr->array_size)
+            {
+              if (auto *lit = dynamic_cast<literal_node *>(arr->array_size.get()))
+              {
+                std::string s = tok_str(lit->value);
+                uint64_t sz = (uint64_t)std::stoull(s);
+                base = llvm::ArrayType::get(base, sz);
+              }
+              else
+                base = llvm::PointerType::get(base, 0);
+            }
+            else
+              base = llvm::PointerType::get(base, 0);
+          }
         }
 
         return base;
@@ -255,7 +271,7 @@ namespace brandy
   // After this call, *lhs and *rhs have the same LLVM type.
   static void promote_to_common(llvm::IRBuilder<> *builder,
                                  llvm::Value *&lhs, llvm::Value *&rhs,
-                                 bool is_unsigned = false)
+                                 bool is_unsigned)
   {
     llvm::Type *lt = lhs->getType();
     llvm::Type *rt = rhs->getType();
@@ -694,7 +710,7 @@ namespace brandy
 
       // Promote obj and arg to a common type
       if (arg)
-        promote_to_common(m_builder, obj, arg);
+        promote_to_common(m_builder, obj, arg, false);
 
       bool is_fp = is_float_value(obj);
 
@@ -718,7 +734,7 @@ namespace brandy
       else if (method == "@inequality") return is_fp ? m_builder->CreateFCmpONE(obj,arg,"fcmpne") : m_builder->CreateICmpNE(obj,arg,"icmpne");
       else if (method == "@greater_than")        return is_fp ? m_builder->CreateFCmpOGT(obj,arg,"fcmpgt") : m_builder->CreateICmpSGT(obj,arg,"scmpgt");
       else if (method == "@less_than")           return is_fp ? m_builder->CreateFCmpOLT(obj,arg,"fcmplt") : m_builder->CreateICmpSLT(obj,arg,"scmplt");
-      else if (method == "@greather_than_or_equal") return is_fp ? m_builder->CreateFCmpOGE(obj,arg,"fcmpge") : m_builder->CreateICmpSGE(obj,arg,"scmpge");
+      else if (method == "@greater_than_or_equal") return is_fp ? m_builder->CreateFCmpOGE(obj,arg,"fcmpge") : m_builder->CreateICmpSGE(obj,arg,"scmpge");
       else if (method == "@less_than_or_equal")  return is_fp ? m_builder->CreateFCmpOLE(obj,arg,"fcmple") : m_builder->CreateICmpSLE(obj,arg,"scmple");
       // Assignment operator
       else if (method == "@assign")
