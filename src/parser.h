@@ -133,7 +133,7 @@ namespace brandy
     template<typename node_type>
     typename std::unique_ptr<node_type> create_node()
     {
-      auto node = make_unique<node_type>();
+      auto node = std::make_unique<node_type>();
       node->begin = m_current;
       return node;
     }

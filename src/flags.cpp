@@ -4,6 +4,7 @@
 // -----------------------------------------------------------------------------
 
 #include "flags.h"
+#include <cstring>
 #include <stack>
 
 // -----------------------------------------------------------------------------
@@ -23,7 +24,9 @@ namespace brandy
     m_dumpParserStack(false),
     m_dumpAst(false),
     m_dumpAstGraph(false),
-    m_inputFile(nullptr)
+    m_emitLlvm(false),
+    m_inputFile(nullptr),
+    m_outputFile(nullptr)
   {
   }
   
@@ -44,6 +47,15 @@ namespace brandy
       else if (strcmp(argv[i], "--dump-ast-graph") == 0)
       {
         m_dumpAstGraph = true;
+      }
+      else if (strcmp(argv[i], "--emit-llvm") == 0)
+      {
+        m_emitLlvm = true;
+      }
+      else if (strcmp(argv[i], "-o") == 0)
+      {
+        if (i + 1 < argc)
+          m_outputFile = argv[++i];
       }
       else
       {
@@ -71,11 +83,21 @@ namespace brandy
     return m_dumpAstGraph;
   }
 
+  bool compiler_flags::emit_llvm()
+  {
+    return m_emitLlvm;
+  }
+
   // ---------------------------------------------------------------------------
 
   const char *compiler_flags::input_file()
   {
     return m_inputFile;
+  }
+
+  const char *compiler_flags::output_file()
+  {
+    return m_outputFile;
   }
 
   // ---------------------------------------------------------------------------

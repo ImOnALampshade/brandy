@@ -28,7 +28,7 @@ namespace brandy
     };
 #undef TOKEN_VALUE
 
-    const char *names[];
+    extern const char *names[];
   }
 
   // ---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ namespace std
     typedef brandy::token argument_type;
     typedef size_t result_type;
 
-    size_t operator()(const brandy::token &tok);
+    size_t operator()(const brandy::token &tok) const;
   };
 }
 
